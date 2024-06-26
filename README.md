@@ -1,2 +1,2 @@
-DAMSim on top of DAM
+*DAMSim
 
