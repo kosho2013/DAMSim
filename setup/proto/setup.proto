@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package setup;
+
+message Accelerator {
+	float freq = 1; // GHz
+
+	int64 X = 2;
+	int64 Y = 3;
+	int64 num_compute_tile = 4;
+	int64 num_memory_tile = 5;
+	int64 num_hybrid_tile = 6;
+	
+	// per compute tile
+	float sram_l1_bw = 7; // GB/s
+	float sram_l1_cap = 8; // bytes
+	// per memory tile
+	int64 lane_dim = 9;
+	int64 stage_dim = 10;
+	int64 word = 20;
+
+	int64 num_switch = 11;
+	
+	// L2 and DRAM
+	float sram_l2_bw = 12; // GB/s
+	float sram_l2_cap = 13; // bytes
+	float dram_bw = 14; // GB/s
+	float dram_cap = 15; // bytes
+}
+
+message System {
+    int64 num_chip = 1;
+	Accelerator accelerator = 2;
+}
