@@ -14,7 +14,7 @@ pub struct pmu_adapter_upstream<A: Clone> {
     pub out_stream_wr_addr: Sender<usize>,
     pub out_stream_wr_data: Sender<A>,
     pub loop_bound: usize,
-    pub upstream_cycle: usize,
+    pub upstream_counter: usize,
 }
 
 impl<A: DAMType> pmu_adapter_upstream<A>
@@ -27,7 +27,7 @@ pmu_adapter_upstream<A>: Context,
         out_stream_wr_addr: Sender<usize>,
         out_stream_wr_data: Sender<A>,
         loop_bound: usize,
-        upstream_cycle: usize,
+        upstream_counter: usize,
     ) -> Self {
         let pmu_adapter_upstream = pmu_adapter_upstream {
             in_stream,
@@ -35,7 +35,7 @@ pmu_adapter_upstream<A>: Context,
             out_stream_wr_addr,
             out_stream_wr_data,
             loop_bound,
-            upstream_cycle,
+            upstream_counter,
             context_info: Default::default(),
         };
         for i in 0..in_len
@@ -66,7 +66,7 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_upstream<A> {
             let out_data: A;
             out_data = in_data.clone();
 
-            for _ in 0..self.upstream_cycle
+            for _ in 0..self.upstream_counter
             {
                 let curr_time = self.time.tick();
                 self.out_stream_wr_addr.enqueue(&self.time, ChannelElement::new(curr_time + 1, 0)).unwrap();
@@ -91,7 +91,7 @@ pub struct pmu_adapter_downstream<A: Clone> {
     pub out_stream: Vec<Sender<A>>,
     pub out_len: usize,
     pub loop_bound: usize,
-    pub downstream_cycle: usize,
+    pub downstream_counter: usize,
 }
 
 impl<A: DAMType> pmu_adapter_downstream<A>
@@ -103,14 +103,14 @@ pmu_adapter_downstream<A>: Context,
         out_stream: Vec<Sender<A>>,
         out_len: usize,
         loop_bound: usize,
-        downstream_cycle: usize,
+        downstream_counter: usize,
     ) -> Self {
         let pmu_adapter_downstream = pmu_adapter_downstream {
             in_stream,
             out_stream,
             out_len,
             loop_bound,
-            downstream_cycle,
+            downstream_counter,
             context_info: Default::default(),
         };
         pmu_adapter_downstream.in_stream.attach_receiver(&pmu_adapter_downstream);
@@ -126,13 +126,13 @@ pmu_adapter_downstream<A>: Context,
 
 impl<A: DAMType + num::Num> Context for pmu_adapter_downstream<A> {
     fn run(&mut self) {
-        let tmp = self.downstream_cycle * self.loop_bound; 
+        let tmp = self.downstream_counter * self.loop_bound; 
         for i in 0..tmp
         {
             let in1: Result<ChannelElement<A>, dam::channel::DequeueError> = self.in_stream.dequeue(&self.time);
             let mut data = in1.unwrap().data.clone();
 
-            if (i % self.downstream_cycle == 0)
+            if (i % self.downstream_counter == 0)
             {
                 for j in 0..self.out_len
                 {
