@@ -9,11 +9,12 @@ use dam::{
 
 #[context_macro]
 pub struct kernel<A: Clone> {
-    pub in_stream: Receiver<A>,
-    pub out_stream: Sender<A>,
+    pub in_stream: Receiver<usize>,
+    pub out_stream: Sender<usize>,
     pub latency: usize,
     pub init_inverval: usize,
     pub loop_bound: usize,
+    pub dummy: A
 }
 
 impl<A: DAMType> kernel<A>
@@ -21,31 +22,33 @@ where
 kernel<A>: Context,
 {
     pub fn new(
-        in_stream: Receiver<A>,
-        out_stream: Sender<A>,
+        in_stream: Receiver<usize>,
+        out_stream: Sender<usize>,
         latency: usize,
         init_inverval: usize,
         loop_bound: usize,
+        dummy: A,
     ) -> Self {
-        let ker = kernel {
+        let kernel = kernel {
             in_stream,
             out_stream,
             latency,
             init_inverval,
             loop_bound,
+            dummy,
             context_info: Default::default(),
         };
-        ker.in_stream.attach_receiver(&ker);
-        ker.out_stream.attach_sender(&ker);
+        kernel.in_stream.attach_receiver(&kernel);
+        kernel.out_stream.attach_sender(&kernel);
 
-        ker
+        kernel
     }
 }
 
 impl<A: DAMType + num::Num> Context for kernel<A> {
     fn run(&mut self) {
         for _ in 0..self.loop_bound {
-            let in1: Result<ChannelElement<A>, dam::channel::DequeueError> = self.in_stream.dequeue(&self.time);
+            let in1 = self.in_stream.dequeue(&self.time);
 
             let curr_time = self.time.tick();
             self.out_stream.enqueue(&self.time, ChannelElement::new(curr_time + self.latency as u64, in1.unwrap().data.clone())).unwrap();

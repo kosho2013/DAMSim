@@ -16,27 +16,6 @@ use dam::{
     types::DAMType,
 };
 
-
-
-
-//                          *
-//                         **
-//                        ***
-//                       ****
-//                       ****
-//                       ****
-//                       ****
-//                       ****
-//                       ****
-//                       ****
-//                       ***
-//                       **
-//                       *
-//             ********* aaaa
-//            *********  aaaa
-//           *********   aaaa
-//          *********    aaaa
-//         *********     aaaa
 pub fn make_simd_pcu<A: dam::types::DAMType + num::Num> (
     dim: usize,
     pcu_receiver: Receiver<A>,

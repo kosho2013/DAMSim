@@ -21,9 +21,21 @@ use templates::kernel_multi_in_out::kernel_multi_in_out;
 use templates::my_pcu::{make_simd_pcu, make_systolic_pcu};
 use templates::pcu_adapter::{simd_pcu_adapter_downstream, simd_pcu_adapter_upstream, systolic_pcu_adapter_downstream, systolic_pcu_adapter_upstream};
 use templates::pmu_adapter::{pmu_adapter_downstream, pmu_adapter_upstream};
+use templates::router_NE::router_NE;
+use templates::router_NEW::router_NEW;
+use templates::router_NSE::router_NSE;
+use templates::router_NSEW::router_NSEW;
+use templates::router_NSW::router_NSW;
+use templates::router_NW::router_NW;
+use templates::router_SE::router_SE;
+use templates::router_SEW::router_SEW;
+use templates::router_SW::router_SW;
+
 
 
 fn main() {
+	let dummy = 1;
+
 	let args: Vec<String> = env::args().collect();
 	println!("{:?}", args);
 
@@ -44,10 +56,12 @@ fn main() {
 	let accelerator = system.accelerator.unwrap();
 	let lane_dim: usize = accelerator.lane_dim as usize;
 	let stage_dim: usize = accelerator.stage_dim as usize;
-	let sram_l1_cap: usize = accelerator.sram_l1_cap as usize;
+	let sram_cap: usize = accelerator.sram_cap as usize;
 	let word: usize = accelerator.word as usize;
+	let x_dim: usize = accelerator.x_dim as usize;
+	let y_dim: usize = accelerator.y_dim as usize;
 
-	let num_vec_per_pmu = sram_l1_cap / lane_dim / word;
+	let num_vec_per_pmu = sram_cap / lane_dim / word;
 	println!("num_vec_per_pmu {}", num_vec_per_pmu);
 
 
@@ -282,94 +296,86 @@ fn main() {
 
 
 
-
-
-
-
-
-
-
-
-		// experiment 1
-		let num_kernel: usize = kernel_latency.len().try_into().unwrap();
-
-		let mut parent = ProgramBuilder::default();
-
-		// channels
-		let mut sender_map_net: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..2
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map_net.insert(j, sender);
-			receiver_map_net.insert(j, receiver);
-		}
-
-		let mut sender_map_mem: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..2
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map_mem.insert(j, sender);
-			receiver_map_mem.insert(j, receiver);
-		}
-
-		let mut sender_map_comp: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map_comp: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..num_kernel+1
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map_comp.insert(j.try_into().unwrap(), sender);
-			receiver_map_comp.insert(j.try_into().unwrap(), receiver);
-		}
-
-
-
-		// off-chip memory
-		let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-		let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
-		parent.add_child(input);
-
-		let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize);
-		parent.add_child(memory);
-
-		let output: ConsumerContext<_> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
-		parent.add_child(output);
-
-
-
-		// off-chip network
-		let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-		let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
-		parent.add_child(input);
-
-		let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize);
-		parent.add_child(network);
-
-		let output: ConsumerContext<_> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
-		parent.add_child(output);
-
-
-		// on-chip compute
-		let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-		let input = GeneratorContext::new(iter, sender_map_comp.remove(&0).unwrap());
-		parent.add_child(input);
-
-		for j in 0..num_kernel
-		{
-			let compute: kernel<usize> = kernel::new(receiver_map_comp.remove(&j).unwrap(), sender_map_comp.remove(&(j+1)).unwrap(), kernel_latency[j as usize] as usize, kernel_latency[j as usize] as usize, num_input as usize);
-			parent.add_child(compute);
-		}
-
-		let output: ConsumerContext<_> = ConsumerContext::new(receiver_map_comp.remove(&num_kernel).unwrap());
-		parent.add_child(output);
-
-
-
 		if experiment == 1
 		{
 			println!("experiment 1 ***************************************************************************************");
 
+			let num_kernel: usize = kernel_latency.len().try_into().unwrap();
+
+			let mut parent = ProgramBuilder::default();
+
+			// channels
+			let mut sender_map_net: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..2
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_net.insert(j, sender);
+				receiver_map_net.insert(j, receiver);
+			}
+
+			let mut sender_map_mem: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..2
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_mem.insert(j, sender);
+				receiver_map_mem.insert(j, receiver);
+			}
+
+			let mut sender_map_comp: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_comp: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..num_kernel+1
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_comp.insert(j.try_into().unwrap(), sender);
+				receiver_map_comp.insert(j.try_into().unwrap(), receiver);
+			}
+
+
+
+			// DRAM
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
+			parent.add_child(input);
+
+			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
+			parent.add_child(memory);
+
+			let output = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
+			parent.add_child(output);
+
+
+
+			// network
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
+			parent.add_child(input);
+
+			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
+			parent.add_child(network);
+
+			let output = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
+			parent.add_child(output);
+
+
+			// on-chip compute
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_comp.remove(&0).unwrap());
+			parent.add_child(input);
+
+			for j in 0..num_kernel
+			{
+				let compute = kernel::new(receiver_map_comp.remove(&j).unwrap(), sender_map_comp.remove(&(j+1)).unwrap(), kernel_latency[j as usize] as usize, kernel_latency[j as usize] as usize, num_input as usize, dummy);
+				parent.add_child(compute);
+			}
+
+			let output = ConsumerContext::new(receiver_map_comp.remove(&num_kernel).unwrap());
+			parent.add_child(output);
+
+
+
+		
 			// run DAM
 			let initialized: dam::simulation::Initialized = parent
 			.initialize(
@@ -396,409 +402,6 @@ fn main() {
 			experiment_time.push(time_tmp as usize);
 		}
 		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// experiment 2		
-		let mut parent = ProgramBuilder::default();
-
-		// off-chip memory
-		let mut sender_map_mem: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..2
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map_mem.insert(j, sender);
-			receiver_map_mem.insert(j, receiver);
-		}
-
-
-		let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-		let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
-		parent.add_child(input);
-
-		let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize);
-		parent.add_child(memory);
-
-		let output: ConsumerContext<_> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
-		parent.add_child(output);
-
-
-
-		// off-chip network
-		let mut sender_map_net: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..2
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map_net.insert(j, sender);
-			receiver_map_net.insert(j, receiver);
-		}
-
-		let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-		let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
-		parent.add_child(input);
-
-		let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize);
-		parent.add_child(network);
-
-		let output: ConsumerContext<_> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
-		parent.add_child(output);
-
-
-
-
-
-		let mut sender_map: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..num_of_connections
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map.insert(j, sender);
-			receiver_map.insert(j, receiver);
-		}
-
-
-
-
-
-		// on-chip pcu contexts
-		for j in 0..pcu_x.len()
-		{
-			let mut pcu_x_tmp = pcu_x[j];
-			let mut pcu_y_tmp = pcu_y[j];
-			let mut pcu_cycle_tmp = pcu_cycle[j];
-			let mut pcu_sender_vec_tmp = vec![];
-			for n in 0..pcu_sender_vec[j].len()
-			{
-				pcu_sender_vec_tmp.push(pcu_sender_vec[j][n]);
-			}		
-			let mut pcu_receiver_vec_tmp = vec![];
-			for n in 0..pcu_receiver_vec[j].len()
-			{
-				pcu_receiver_vec_tmp.push(pcu_receiver_vec[j][n]);
-			}
-
-
-			let simd_or_systolic = pcu_SIMD_or_Systolic[j];
-			let M = pcu_M[j];
-			let K = pcu_K[j];
-			let N = pcu_N[j];
-
-
-
-			let no_connection = 999999;
-			if pcu_receiver_vec_tmp[0] == no_connection
-			{
-				let mut tmp_sender_vec = vec![];
-				for k in 0..pcu_sender_vec_tmp.len()
-				{
-					tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
-				}
-				let (sender, receiver) = parent.bounded(1024);
-				let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-				let gen = GeneratorContext::new(iter, sender);
-				parent.add_child(gen);
-
-
-				let mut tmp_receiver_vec = vec![];
-				tmp_receiver_vec.push(receiver);
-				
-
-
-				if simd_or_systolic == "SIMD"
-				{					
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					
-					let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_upstream);
-
-					let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
-					parent.add_child(pcu);
-
-					let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_downstream);
-
-				} else if simd_or_systolic == "Systolic"
-				{
-					// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					let (sender3, receiver3) = parent.bounded(1024);
-					let (sender4, receiver4) = parent.bounded(1024);
-
-					let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_upstream);
-
-					let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
-					parent.add_child(pcu_lane);
-
-					let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
-					parent.add_child(pcu_stage);
-
-					let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_downstream);
-
-
-
-
-				} else {
-					panic!("Wrong!");
-				}
-
-
-
-
-			} else if pcu_sender_vec_tmp[0] == no_connection
-			{
-				let mut tmp_receiver_vec = vec![];
-				for k in 0..pcu_receiver_vec_tmp.len()
-				{
-					tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
-				}
-
-				let (sender, receiver) = parent.bounded(1024);
-				let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
-				tmp_sender_vec.push(sender);
-				
-				
-
-
-				if simd_or_systolic == "SIMD"
-				{					
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					
-					let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_upstream);
-
-					let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
-					parent.add_child(pcu);
-
-					let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_downstream);
-
-				} else if simd_or_systolic == "Systolic"
-				{
-					// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					let (sender3, receiver3) = parent.bounded(1024);
-					let (sender4, receiver4) = parent.bounded(1024);
-
-					let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_upstream);
-
-					let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
-					parent.add_child(pcu_lane);
-
-					let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
-					parent.add_child(pcu_stage);
-
-					let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_downstream);
-
-
-
-
-				} else {
-					panic!("Wrong!");
-				}
-
-
-
-
-
-				let con = ConsumerContext::new(receiver);
-				parent.add_child(con);
-
-
-			} else if pcu_receiver_vec_tmp[0] == no_connection && pcu_sender_vec_tmp[0] == no_connection
-			{
-				panic!("Wrong!");
-
-
-			} else
-			{
-				let mut tmp_receiver_vec = vec![];
-				for k in 0..pcu_receiver_vec_tmp.len()
-				{
-					tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
-				}
-
-				let mut tmp_sender_vec = vec![];
-				for k in 0..pcu_sender_vec_tmp.len()
-				{
-					tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
-				}
-
-
-
-				if simd_or_systolic == "SIMD"
-				{					
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					
-					let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_upstream);
-
-					let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
-					parent.add_child(pcu);
-
-					let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_downstream);
-
-				} else if simd_or_systolic == "Systolic"
-				{
-					// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-
-
-
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					let (sender3, receiver3) = parent.bounded(1024);
-					let (sender4, receiver4) = parent.bounded(1024);
-
-					let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_upstream);
-
-					let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
-					parent.add_child(pcu_lane);
-
-					let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
-					parent.add_child(pcu_stage);
-
-					let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_downstream);
-
-
-
-
-
-
-
-
-
-				} else {
-					panic!("Wrong!");
-				}
-
-
-			}
-		}
-
-
-
-
-
-
-
-		// on-chip pmu contexts
-		for j in 0..pmu_x.len()
-		{
-			let mut pmu_x_tmp = pmu_x[j];
-			let mut pmu_y_tmp = pmu_y[j];
-			let mut pmu_cycle_tmp = pmu_cycle[j];
-			let mut pmu_sender_vec_tmp = vec![];
-			for n in 0..pmu_sender_vec[j].len()
-			{
-				pmu_sender_vec_tmp.push(pmu_sender_vec[j][n]);
-			}		
-			let mut pmu_receiver_vec_tmp = vec![];
-			for n in 0..pmu_receiver_vec[j].len()
-			{
-				pmu_receiver_vec_tmp.push(pmu_receiver_vec[j][n]);
-			}
-			
-			let no_connection = 999999;
-			if pmu_receiver_vec_tmp[0] == no_connection
-			{
-				let mut tmp_sender_vec = vec![];
-				for k in 0..pmu_sender_vec_tmp.len()
-				{
-					tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
-				}
-				let (sender, receiver) = parent.bounded(1024);
-				let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-				let gen = GeneratorContext::new(iter, sender);
-				parent.add_child(gen);
-
-
-				let mut tmp_receiver_vec = vec![];
-				tmp_receiver_vec.push(receiver);
-				
-				let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
-				parent.add_child(kernel);
-
-			} else if pmu_sender_vec_tmp[0] == no_connection
-			{
-				let mut tmp_receiver_vec = vec![];
-				for k in 0..pmu_receiver_vec_tmp.len()
-				{
-					tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
-				}
-
-				let (sender, receiver) = parent.bounded(1024);
-				let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
-				tmp_sender_vec.push(sender);
-				
-				let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
-				parent.add_child(kernel);
-
-				let con = ConsumerContext::new(receiver);
-				parent.add_child(con);
-
-
-			} else if pmu_receiver_vec_tmp[0] == no_connection && pmu_sender_vec_tmp[0] == no_connection
-			{
-				panic!("Wrong!");
-
-
-			} else
-			{
-				let mut tmp_receiver_vec = vec![];
-				for k in 0..pmu_receiver_vec_tmp.len()
-				{
-					tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
-				}
-
-				let mut tmp_sender_vec = vec![];
-				for k in 0..pmu_sender_vec_tmp.len()
-				{
-					tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
-				}
-				let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
-				parent.add_child(kernel);
-
-
-
-			}
-		}
-
-
 
 
 
@@ -814,7 +417,393 @@ fn main() {
 		if experiment == 2
 		{
 			println!("experiment 2 ***************************************************************************************");
+	
+			let mut parent = ProgramBuilder::default();
 
+			// DRAM
+			let mut sender_map_mem: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..2
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_mem.insert(j, sender);
+				receiver_map_mem.insert(j, receiver);
+			}
+
+
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
+			parent.add_child(input);
+
+			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
+			parent.add_child(memory);
+
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
+			parent.add_child(output);
+
+
+
+			// network
+			let mut sender_map_net: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..2
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_net.insert(j, sender);
+				receiver_map_net.insert(j, receiver);
+			}
+
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
+			parent.add_child(input);
+
+			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
+			parent.add_child(network);
+
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
+			parent.add_child(output);
+
+
+
+
+
+			let mut sender_map: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..num_of_connections
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map.insert(j, sender);
+				receiver_map.insert(j, receiver);
+			}
+
+
+
+
+
+			// compute tile
+			for j in 0..pcu_x.len()
+			{
+				let mut pcu_x_tmp = pcu_x[j];
+				let mut pcu_y_tmp = pcu_y[j];
+				let mut pcu_cycle_tmp = pcu_cycle[j];
+				let mut pcu_sender_vec_tmp = vec![];
+				for n in 0..pcu_sender_vec[j].len()
+				{
+					pcu_sender_vec_tmp.push(pcu_sender_vec[j][n]);
+				}		
+				let mut pcu_receiver_vec_tmp = vec![];
+				for n in 0..pcu_receiver_vec[j].len()
+				{
+					pcu_receiver_vec_tmp.push(pcu_receiver_vec[j][n]);
+				}
+
+
+				let simd_or_systolic = pcu_SIMD_or_Systolic[j];
+				let M = pcu_M[j];
+				let K = pcu_K[j];
+				let N = pcu_N[j];
+
+
+
+				let no_connection = 999999;
+				if pcu_receiver_vec_tmp[0] == no_connection
+				{
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pcu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+					}
+					let (sender, receiver) = parent.bounded(1024);
+					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+					let gen = GeneratorContext::new(iter, sender);
+					parent.add_child(gen);
+
+
+					let mut tmp_receiver_vec = vec![];
+					tmp_receiver_vec.push(receiver);
+					
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+
+
+				} else if pcu_sender_vec_tmp[0] == no_connection
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pcu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let (sender, receiver) = parent.bounded(1024);
+					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
+					tmp_sender_vec.push(sender);
+					
+					
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+
+
+
+					let con = ConsumerContext::new(receiver);
+					parent.add_child(con);
+
+
+				} else if pcu_receiver_vec_tmp[0] == no_connection && pcu_sender_vec_tmp[0] == no_connection
+				{
+					panic!("Wrong!");
+
+
+				} else
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pcu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pcu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+					}
+
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+				}
+			}
+
+
+
+
+
+
+
+			// memory tile
+			for j in 0..pmu_x.len()
+			{
+				let mut pmu_x_tmp = pmu_x[j];
+				let mut pmu_y_tmp = pmu_y[j];
+				let mut pmu_cycle_tmp = pmu_cycle[j];
+				let mut pmu_sender_vec_tmp = vec![];
+				for n in 0..pmu_sender_vec[j].len()
+				{
+					pmu_sender_vec_tmp.push(pmu_sender_vec[j][n]);
+				}		
+				let mut pmu_receiver_vec_tmp = vec![];
+				for n in 0..pmu_receiver_vec[j].len()
+				{
+					pmu_receiver_vec_tmp.push(pmu_receiver_vec[j][n]);
+				}
+				
+				let no_connection = 999999;
+				if pmu_receiver_vec_tmp[0] == no_connection
+				{
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pmu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+					}
+					let (sender, receiver) = parent.bounded(1024);
+					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+					let gen = GeneratorContext::new(iter, sender);
+					parent.add_child(gen);
+
+
+					let mut tmp_receiver_vec = vec![];
+					tmp_receiver_vec.push(receiver);
+					
+					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize, dummy);
+					parent.add_child(kernel);
+
+				} else if pmu_sender_vec_tmp[0] == no_connection
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pmu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let (sender, receiver) = parent.bounded(1024);
+					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
+					tmp_sender_vec.push(sender);
+					
+					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize, dummy);
+					parent.add_child(kernel);
+
+					let con = ConsumerContext::new(receiver);
+					parent.add_child(con);
+
+
+				} else if pmu_receiver_vec_tmp[0] == no_connection && pmu_sender_vec_tmp[0] == no_connection
+				{
+					panic!("Wrong!");
+
+
+				} else
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pmu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pmu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+					}
+					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize, dummy);
+					parent.add_child(kernel);
+
+
+
+				}
+			}
+
+
+		
 			// run DAM
 			let initialized: dam::simulation::Initialized = parent
 			.initialize(
@@ -860,595 +849,590 @@ fn main() {
 
 
 
-
-
-
-
-
-		// experiment 3
-		let mut parent = ProgramBuilder::default();
-
-		// off-chip memory
-		let mut sender_map_mem: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..2
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map_mem.insert(j, sender);
-			receiver_map_mem.insert(j, receiver);
-		}
-
-
-		let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-		let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
-		parent.add_child(input);
-
-		let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize);
-		parent.add_child(memory);
-
-		let output: ConsumerContext<_> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
-		parent.add_child(output);
-
-
-
-		// off-chip network
-		let mut sender_map_net: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..2
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map_net.insert(j, sender);
-			receiver_map_net.insert(j, receiver);
-		}
-
-		let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-		let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
-		parent.add_child(input);
-
-		let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize);
-		parent.add_child(network);
-
-		let output: ConsumerContext<_> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
-		parent.add_child(output);
-
-
-
-
-
-		let mut sender_map: HashMap<usize, dam::channel::Sender<_>> = HashMap::new();
-		let mut receiver_map: HashMap<usize, dam::channel::Receiver<_>> = HashMap::new();
-		for j in 0..num_of_connections
-		{
-			let (sender, receiver) = parent.bounded(1024);
-			sender_map.insert(j, sender);
-			receiver_map.insert(j, receiver);
-		}
-
-
-
-
-
-		// on-chip pcu contexts
-		for j in 0..pcu_x.len()
-		{
-			let mut pcu_x_tmp = pcu_x[j];
-			let mut pcu_y_tmp = pcu_y[j];
-			let mut pcu_cycle_tmp = pcu_cycle[j];
-			let mut pcu_sender_vec_tmp = vec![];
-			for n in 0..pcu_sender_vec[j].len()
-			{
-				pcu_sender_vec_tmp.push(pcu_sender_vec[j][n]);
-			}		
-			let mut pcu_receiver_vec_tmp = vec![];
-			for n in 0..pcu_receiver_vec[j].len()
-			{
-				pcu_receiver_vec_tmp.push(pcu_receiver_vec[j][n]);
-			}
-
-
-			let simd_or_systolic = pcu_SIMD_or_Systolic[j];
-			let M = pcu_M[j];
-			let K = pcu_K[j];
-			let N = pcu_N[j];
-
-
-
-			let no_connection = 999999;
-			if pcu_receiver_vec_tmp[0] == no_connection
-			{
-				let mut tmp_sender_vec = vec![];
-				for k in 0..pcu_sender_vec_tmp.len()
-				{
-					tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
-				}
-				let (sender, receiver) = parent.bounded(1024);
-				let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-				let gen = GeneratorContext::new(iter, sender);
-				parent.add_child(gen);
-
-
-				let mut tmp_receiver_vec = vec![];
-				tmp_receiver_vec.push(receiver);
-				
-
-
-				if simd_or_systolic == "SIMD"
-				{					
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					
-					let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_upstream);
-
-					let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
-					parent.add_child(pcu);
-
-					let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_downstream);
-
-				} else if simd_or_systolic == "Systolic"
-				{
-					// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					let (sender3, receiver3) = parent.bounded(1024);
-					let (sender4, receiver4) = parent.bounded(1024);
-
-					let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_upstream);
-
-					let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
-					parent.add_child(pcu_lane);
-
-					let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
-					parent.add_child(pcu_stage);
-
-					let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_downstream);
-
-
-
-
-				} else {
-					panic!("Wrong!");
-				}
-
-
-
-
-			} else if pcu_sender_vec_tmp[0] == no_connection
-			{
-				let mut tmp_receiver_vec = vec![];
-				for k in 0..pcu_receiver_vec_tmp.len()
-				{
-					tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
-				}
-
-				let (sender, receiver) = parent.bounded(1024);
-				let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
-				tmp_sender_vec.push(sender);
-				
-				
-
-
-				if simd_or_systolic == "SIMD"
-				{					
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					
-					let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_upstream);
-
-					let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
-					parent.add_child(pcu);
-
-					let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_downstream);
-
-				} else if simd_or_systolic == "Systolic"
-				{
-					// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					let (sender3, receiver3) = parent.bounded(1024);
-					let (sender4, receiver4) = parent.bounded(1024);
-
-					let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_upstream);
-
-					let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
-					parent.add_child(pcu_lane);
-
-					let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
-					parent.add_child(pcu_stage);
-
-					let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_downstream);
-
-
-
-
-				} else {
-					panic!("Wrong!");
-				}
-
-
-
-
-
-				let con = ConsumerContext::new(receiver);
-				parent.add_child(con);
-
-
-			} else if pcu_receiver_vec_tmp[0] == no_connection && pcu_sender_vec_tmp[0] == no_connection
-			{
-				panic!("Wrong!");
-
-
-			} else
-			{
-				let mut tmp_receiver_vec = vec![];
-				for k in 0..pcu_receiver_vec_tmp.len()
-				{
-					tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
-				}
-
-				let mut tmp_sender_vec = vec![];
-				for k in 0..pcu_sender_vec_tmp.len()
-				{
-					tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
-				}
-
-
-
-				if simd_or_systolic == "SIMD"
-				{					
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					
-					let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_upstream);
-
-					let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
-					parent.add_child(pcu);
-
-					let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize);
-					parent.add_child(simd_pcu_adapter_downstream);
-
-				} else if simd_or_systolic == "Systolic"
-				{
-					// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-
-
-
-					let (sender1, receiver1) = parent.bounded(1024);
-					let (sender2, receiver2) = parent.bounded(1024);
-					let (sender3, receiver3) = parent.bounded(1024);
-					let (sender4, receiver4) = parent.bounded(1024);
-
-					let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_upstream);
-
-					let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
-					parent.add_child(pcu_lane);
-
-					let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
-					parent.add_child(pcu_stage);
-
-					let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim);
-					parent.add_child(systolic_pcu_adapter_downstream);
-
-
-
-
-
-
-
-
-
-				} else {
-					panic!("Wrong!");
-				}
-
-
-			}
-		}
-
-
-
-
-
-
-
-		// on-chip pmu contexts
-		for j in 0..pmu_x.len()
-		{
-			let mut pmu_x_tmp = pmu_x[j];
-			let mut pmu_y_tmp = pmu_y[j];
-			let mut pmu_cycle_tmp = pmu_cycle[j];
-			let mut pmu_sender_vec_tmp = vec![];
-			for n in 0..pmu_sender_vec[j].len()
-			{
-				pmu_sender_vec_tmp.push(pmu_sender_vec[j][n]);
-			}		
-			let mut pmu_receiver_vec_tmp = vec![];
-			for n in 0..pmu_receiver_vec[j].len()
-			{
-				pmu_receiver_vec_tmp.push(pmu_receiver_vec[j][n]);
-			}
-			
-			let no_connection = 999999;
-			if pmu_receiver_vec_tmp[0] == no_connection
-			{
-				let mut tmp_sender_vec = vec![];
-				for k in 0..pmu_sender_vec_tmp.len()
-				{
-					tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
-				}
-				let (sender, receiver) = parent.bounded(1024);
-				let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
-				let gen = GeneratorContext::new(iter, sender);
-				parent.add_child(gen);
-
-
-				let mut tmp_receiver_vec = vec![];
-				tmp_receiver_vec.push(receiver);
-				
-				// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
-				// parent.add_child(kernel);
-
-
-
-
-
-				let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-				let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-				let (ack_sender, ack_receiver) = parent.bounded(1024);
-				let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-				let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
-
-				let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp);
-				parent.add_child(pmu_adapter_upstream);
-
-				let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
-					num_vec_per_pmu,
-					Behavior {
-						mod_address: false,
-						use_default_value: false,
-					},
-				);
-				pmu.add_writer(PMUWriteBundle {
-					addr: wr_addr_receiver,
-					data: wr_data_receiver,
-					ack: ack_sender,
-				});
-				pmu.add_reader(PMUReadBundle {
-					addr: rd_addr_receiver,
-					resp: rd_data_sender,
-				});
-				parent.add_child(pmu);
-
-
-
-				
-				let mut rd_addr_gen = FunctionContext::new();
-				ack_receiver.attach_receiver(&rd_addr_gen);
-				rd_addr_sender.attach_sender(&rd_addr_gen);
-				let tmp = pmu_cycle_tmp * num_input;
-				rd_addr_gen.set_run(move |time| {
-					for idx in 0..tmp
-					{
-						ack_receiver.dequeue(time).unwrap();
-						let curr_time = time.tick();
-						rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
-					}
-				});
-				parent.add_child(rd_addr_gen);
-
-
-
-
-				
-				let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp);
-				parent.add_child(pmu_adapter_downstream);
-
-
-
-
-
-
-
-
-
-
-			} else if pmu_sender_vec_tmp[0] == no_connection
-			{
-				let mut tmp_receiver_vec = vec![];
-				for k in 0..pmu_receiver_vec_tmp.len()
-				{
-					tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
-				}
-
-				let (sender, receiver) = parent.bounded(1024);
-				let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
-				tmp_sender_vec.push(sender);
-				
-				// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
-				// parent.add_child(kernel);
-
-
-
-
-
-
-				let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-				let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-				let (ack_sender, ack_receiver) = parent.bounded(1024);
-				let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-				let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
-
-				let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp);
-				parent.add_child(pmu_adapter_upstream);
-
-				let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
-					num_vec_per_pmu,
-					Behavior {
-						mod_address: false,
-						use_default_value: false,
-					},
-				);
-				pmu.add_writer(PMUWriteBundle {
-					addr: wr_addr_receiver,
-					data: wr_data_receiver,
-					ack: ack_sender,
-				});
-				pmu.add_reader(PMUReadBundle {
-					addr: rd_addr_receiver,
-					resp: rd_data_sender,
-				});
-				parent.add_child(pmu);
-
-
-
-				
-				let mut rd_addr_gen = FunctionContext::new();
-				ack_receiver.attach_receiver(&rd_addr_gen);
-				rd_addr_sender.attach_sender(&rd_addr_gen);
-				let tmp = pmu_cycle_tmp * num_input;
-				rd_addr_gen.set_run(move |time| {
-					for idx in 0..tmp
-					{
-						ack_receiver.dequeue(time).unwrap();
-						let curr_time = time.tick();
-						rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
-					}
-				});
-				parent.add_child(rd_addr_gen);
-
-
-
-
-				
-				let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_cycle_tmp);
-				parent.add_child(pmu_adapter_downstream);
-
-
-
-
-
-
-
-
-
-				let con = ConsumerContext::new(receiver);
-				parent.add_child(con);
-
-
-			} else if pmu_receiver_vec_tmp[0] == no_connection && pmu_sender_vec_tmp[0] == no_connection
-			{
-				panic!("Wrong!");
-
-
-			} else
-			{
-				let mut tmp_receiver_vec = vec![];
-				for k in 0..pmu_receiver_vec_tmp.len()
-				{
-					tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
-				}
-
-				let mut tmp_sender_vec = vec![];
-				for k in 0..pmu_sender_vec_tmp.len()
-				{
-					tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
-				}
-
-
-				
-				// let kernel: kernel_multi_in_out<_> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
-				// parent.add_child(kernel);
-
-				
-
-
-
-				let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-				let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-				let (ack_sender, ack_receiver) = parent.bounded(1024);
-				let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-				let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
-
-				let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp);
-				parent.add_child(pmu_adapter_upstream);
-
-				let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
-					num_vec_per_pmu,
-					Behavior {
-						mod_address: false,
-						use_default_value: false,
-					},
-				);
-				pmu.add_writer(PMUWriteBundle {
-					addr: wr_addr_receiver,
-					data: wr_data_receiver,
-					ack: ack_sender,
-				});
-				pmu.add_reader(PMUReadBundle {
-					addr: rd_addr_receiver,
-					resp: rd_data_sender,
-				});
-				parent.add_child(pmu);
-
-
-
-				
-				let mut rd_addr_gen = FunctionContext::new();
-				ack_receiver.attach_receiver(&rd_addr_gen);
-				rd_addr_sender.attach_sender(&rd_addr_gen);
-				let tmp = pmu_cycle_tmp * num_input;
-				rd_addr_gen.set_run(move |time| {
-					for idx in 0..tmp
-					{
-						ack_receiver.dequeue(time).unwrap();
-						let curr_time = time.tick();
-						rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
-					}
-				});
-				parent.add_child(rd_addr_gen);
-
-
-
-
-				
-				let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp);
-				parent.add_child(pmu_adapter_downstream);
-
-
-
-
-
-
-
-
-
-			}
-		}
-
-
-
-
 		if experiment == 3
 		{
 			println!("experiment 3 ***************************************************************************************");
 
+			let mut parent = ProgramBuilder::default();
+
+			// DRAM
+			let mut sender_map_mem: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..2
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_mem.insert(j, sender);
+				receiver_map_mem.insert(j, receiver);
+			}
+
+
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
+			parent.add_child(input);
+
+			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
+			parent.add_child(memory);
+
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
+			parent.add_child(output);
+
+
+
+			// network
+			let mut sender_map_net: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..2
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_net.insert(j, sender);
+				receiver_map_net.insert(j, receiver);
+			}
+
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
+			parent.add_child(input);
+
+			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
+			parent.add_child(network);
+
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
+			parent.add_child(output);
+
+
+
+
+
+			let mut sender_map: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..num_of_connections
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map.insert(j, sender);
+				receiver_map.insert(j, receiver);
+			}
+
+
+
+
+
+			// compute tile
+			for j in 0..pcu_x.len()
+			{
+				let mut pcu_x_tmp = pcu_x[j];
+				let mut pcu_y_tmp = pcu_y[j];
+				let mut pcu_cycle_tmp = pcu_cycle[j];
+				let mut pcu_sender_vec_tmp = vec![];
+				for n in 0..pcu_sender_vec[j].len()
+				{
+					pcu_sender_vec_tmp.push(pcu_sender_vec[j][n]);
+				}		
+				let mut pcu_receiver_vec_tmp = vec![];
+				for n in 0..pcu_receiver_vec[j].len()
+				{
+					pcu_receiver_vec_tmp.push(pcu_receiver_vec[j][n]);
+				}
+
+
+				let simd_or_systolic = pcu_SIMD_or_Systolic[j];
+				let M = pcu_M[j];
+				let K = pcu_K[j];
+				let N = pcu_N[j];
+
+
+
+				let no_connection = 999999;
+				if pcu_receiver_vec_tmp[0] == no_connection
+				{
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pcu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+					}
+					let (sender, receiver) = parent.bounded(1024);
+					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+					let gen = GeneratorContext::new(iter, sender);
+					parent.add_child(gen);
+
+
+					let mut tmp_receiver_vec = vec![];
+					tmp_receiver_vec.push(receiver);
+					
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+
+
+				} else if pcu_sender_vec_tmp[0] == no_connection
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pcu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let (sender, receiver) = parent.bounded(1024);
+					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
+					tmp_sender_vec.push(sender);
+					
+					
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+
+
+
+					let con = ConsumerContext::new(receiver);
+					parent.add_child(con);
+
+
+				} else if pcu_receiver_vec_tmp[0] == no_connection && pcu_sender_vec_tmp[0] == no_connection
+				{
+					panic!("Wrong!");
+
+
+				} else
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pcu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pcu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+					}
+
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+				}
+			}
+
+
+
+
+
+
+
+			// memory tile
+			for j in 0..pmu_x.len()
+			{
+				let mut pmu_x_tmp = pmu_x[j];
+				let mut pmu_y_tmp = pmu_y[j];
+				let mut pmu_cycle_tmp = pmu_cycle[j];
+				let mut pmu_sender_vec_tmp = vec![];
+				for n in 0..pmu_sender_vec[j].len()
+				{
+					pmu_sender_vec_tmp.push(pmu_sender_vec[j][n]);
+				}		
+				let mut pmu_receiver_vec_tmp = vec![];
+				for n in 0..pmu_receiver_vec[j].len()
+				{
+					pmu_receiver_vec_tmp.push(pmu_receiver_vec[j][n]);
+				}
+				
+				let no_connection = 999999;
+				if pmu_receiver_vec_tmp[0] == no_connection
+				{
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pmu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+					}
+					let (sender, receiver) = parent.bounded(1024);
+					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+					let gen = GeneratorContext::new(iter, sender);
+					parent.add_child(gen);
+
+
+					let mut tmp_receiver_vec = vec![];
+					tmp_receiver_vec.push(receiver);
+					
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// parent.add_child(kernel);
+
+
+
+
+
+					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
+					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
+					let (ack_sender, ack_receiver) = parent.bounded(1024);
+					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
+					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_upstream);
+
+					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
+						num_vec_per_pmu,
+						Behavior {
+							mod_address: false,
+							use_default_value: false,
+						},
+					);
+					pmu.add_writer(PMUWriteBundle {
+						addr: wr_addr_receiver,
+						data: wr_data_receiver,
+						ack: ack_sender,
+					});
+					pmu.add_reader(PMUReadBundle {
+						addr: rd_addr_receiver,
+						resp: rd_data_sender,
+					});
+					parent.add_child(pmu);
+
+
+
+					
+					let mut rd_addr_gen = FunctionContext::new();
+					ack_receiver.attach_receiver(&rd_addr_gen);
+					rd_addr_sender.attach_sender(&rd_addr_gen);
+					let tmp = pmu_cycle_tmp * num_input;
+					rd_addr_gen.set_run(move |time| {
+						for idx in 0..tmp
+						{
+							ack_receiver.dequeue(time).unwrap();
+							let curr_time = time.tick();
+							rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
+						}
+					});
+					parent.add_child(rd_addr_gen);
+
+
+
+
+					
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+
+				} else if pmu_sender_vec_tmp[0] == no_connection
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pmu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let (sender, receiver) = parent.bounded(1024);
+					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
+					tmp_sender_vec.push(sender);
+					
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// parent.add_child(kernel);
+
+
+
+
+
+
+					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
+					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
+					let (ack_sender, ack_receiver) = parent.bounded(1024);
+					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
+					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_upstream);
+
+					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
+						num_vec_per_pmu,
+						Behavior {
+							mod_address: false,
+							use_default_value: false,
+						},
+					);
+					pmu.add_writer(PMUWriteBundle {
+						addr: wr_addr_receiver,
+						data: wr_data_receiver,
+						ack: ack_sender,
+					});
+					pmu.add_reader(PMUReadBundle {
+						addr: rd_addr_receiver,
+						resp: rd_data_sender,
+					});
+					parent.add_child(pmu);
+
+
+
+					
+					let mut rd_addr_gen = FunctionContext::new();
+					ack_receiver.attach_receiver(&rd_addr_gen);
+					rd_addr_sender.attach_sender(&rd_addr_gen);
+					let tmp = pmu_cycle_tmp * num_input;
+					rd_addr_gen.set_run(move |time| {
+						for idx in 0..tmp
+						{
+							ack_receiver.dequeue(time).unwrap();
+							let curr_time = time.tick();
+							rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
+						}
+					});
+					parent.add_child(rd_addr_gen);
+
+
+
+
+					
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+					let con = ConsumerContext::new(receiver);
+					parent.add_child(con);
+
+
+				} else if pmu_receiver_vec_tmp[0] == no_connection && pmu_sender_vec_tmp[0] == no_connection
+				{
+					panic!("Wrong!");
+
+
+				} else
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pmu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pmu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+					}
+
+
+					
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// parent.add_child(kernel);
+
+					
+
+
+
+					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
+					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
+					let (ack_sender, ack_receiver) = parent.bounded(1024);
+					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
+					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_upstream);
+
+					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
+						num_vec_per_pmu,
+						Behavior {
+							mod_address: false,
+							use_default_value: false,
+						},
+					);
+					pmu.add_writer(PMUWriteBundle {
+						addr: wr_addr_receiver,
+						data: wr_data_receiver,
+						ack: ack_sender,
+					});
+					pmu.add_reader(PMUReadBundle {
+						addr: rd_addr_receiver,
+						resp: rd_data_sender,
+					});
+					parent.add_child(pmu);
+
+
+
+					
+					let mut rd_addr_gen = FunctionContext::new();
+					ack_receiver.attach_receiver(&rd_addr_gen);
+					rd_addr_sender.attach_sender(&rd_addr_gen);
+					let tmp = pmu_cycle_tmp * num_input;
+					rd_addr_gen.set_run(move |time| {
+						for idx in 0..tmp
+						{
+							ack_receiver.dequeue(time).unwrap();
+							let curr_time = time.tick();
+							rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
+						}
+					});
+					parent.add_child(rd_addr_gen);
+
+
+
+
+					
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+				}
+			}
+
+
+
+
+		
 			// run DAM
 			let initialized: dam::simulation::Initialized = parent
 			.initialize(
@@ -1496,10 +1480,886 @@ fn main() {
 
 
 
-		println!("\n\n\n\n\n\n\n");	
+
+
+
+
+
+
+
+
+
+		if experiment == 4
+		{
+			println!("experiment 4 ***************************************************************************************");
+
+			let mut parent = ProgramBuilder::default();
+
+			// DRAM
+			let mut sender_map_mem: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..2
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_mem.insert(j, sender);
+				receiver_map_mem.insert(j, receiver);
+			}
+
+
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
+			parent.add_child(input);
+
+			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
+			parent.add_child(memory);
+
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
+			parent.add_child(output);
+
+
+
+			// network
+			let mut sender_map_net: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..2
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map_net.insert(j, sender);
+				receiver_map_net.insert(j, receiver);
+			}
+
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
+			parent.add_child(input);
+
+			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
+			parent.add_child(network);
+
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
+			parent.add_child(output);
+
+
+
+
+
+			let mut sender_map: HashMap<usize, dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
+			for j in 0..num_of_connections
+			{
+				let (sender, receiver) = parent.bounded(1024);
+				sender_map.insert(j, sender);
+				receiver_map.insert(j, receiver);
+			}
+
+
+
+
+
+			
+
+
+
+
+
+
+			// compute tile
+			for j in 0..pcu_x.len()
+			{
+				let mut pcu_x_tmp = pcu_x[j];
+				let mut pcu_y_tmp = pcu_y[j];
+				let mut pcu_cycle_tmp = pcu_cycle[j];
+				let mut pcu_sender_vec_tmp = vec![];
+				for n in 0..pcu_sender_vec[j].len()
+				{
+					pcu_sender_vec_tmp.push(pcu_sender_vec[j][n]);
+				}		
+				let mut pcu_receiver_vec_tmp = vec![];
+				for n in 0..pcu_receiver_vec[j].len()
+				{
+					pcu_receiver_vec_tmp.push(pcu_receiver_vec[j][n]);
+				}
+
+
+				let simd_or_systolic = pcu_SIMD_or_Systolic[j];
+				let M = pcu_M[j];
+				let K = pcu_K[j];
+				let N = pcu_N[j];
+
+
+
+				let no_connection = 999999;
+				if pcu_receiver_vec_tmp[0] == no_connection
+				{
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pcu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+					}
+					let (sender, receiver) = parent.bounded(1024);
+					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+					let gen = GeneratorContext::new(iter, sender);
+					parent.add_child(gen);
+
+
+					let mut tmp_receiver_vec = vec![];
+					tmp_receiver_vec.push(receiver);
+					
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+
+
+				} else if pcu_sender_vec_tmp[0] == no_connection
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pcu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let (sender, receiver) = parent.bounded(1024);
+					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
+					tmp_sender_vec.push(sender);
+					
+					
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+
+
+
+					let con = ConsumerContext::new(receiver);
+					parent.add_child(con);
+
+
+				} else if pcu_receiver_vec_tmp[0] == no_connection && pcu_sender_vec_tmp[0] == no_connection
+				{
+					panic!("Wrong!");
+
+
+				} else
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pcu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pcu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+					}
+
+
+
+					if simd_or_systolic == "SIMD"
+					{					
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						
+						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_upstream);
+
+						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+						parent.add_child(pcu);
+
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						parent.add_child(simd_pcu_adapter_downstream);
+
+					} else if simd_or_systolic == "Systolic"
+					{
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// parent.add_child(kernel);
+
+
+
+
+						let (sender1, receiver1) = parent.bounded(1024);
+						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender3, receiver3) = parent.bounded(1024);
+						let (sender4, receiver4) = parent.bounded(1024);
+
+						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_upstream);
+
+						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+						parent.add_child(pcu_lane);
+
+						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+						parent.add_child(pcu_stage);
+
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						parent.add_child(systolic_pcu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+					} else {
+						panic!("Wrong!");
+					}
+
+
+				}
+			}
+
+
+
+
+
+
+
+			// memory tile
+			for j in 0..pmu_x.len()
+			{
+				let mut pmu_x_tmp = pmu_x[j];
+				let mut pmu_y_tmp = pmu_y[j];
+				let mut pmu_cycle_tmp = pmu_cycle[j];
+				let mut pmu_sender_vec_tmp = vec![];
+				for n in 0..pmu_sender_vec[j].len()
+				{
+					pmu_sender_vec_tmp.push(pmu_sender_vec[j][n]);
+				}		
+				let mut pmu_receiver_vec_tmp = vec![];
+				for n in 0..pmu_receiver_vec[j].len()
+				{
+					pmu_receiver_vec_tmp.push(pmu_receiver_vec[j][n]);
+				}
+				
+				let no_connection = 999999;
+				if pmu_receiver_vec_tmp[0] == no_connection
+				{
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pmu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+					}
+					let (sender, receiver) = parent.bounded(1024);
+					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+					let gen = GeneratorContext::new(iter, sender);
+					parent.add_child(gen);
+
+
+					let mut tmp_receiver_vec = vec![];
+					tmp_receiver_vec.push(receiver);
+					
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// parent.add_child(kernel);
+
+
+
+
+
+					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
+					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
+					let (ack_sender, ack_receiver) = parent.bounded(1024);
+					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
+					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_upstream);
+
+					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
+						num_vec_per_pmu,
+						Behavior {
+							mod_address: false,
+							use_default_value: false,
+						},
+					);
+					pmu.add_writer(PMUWriteBundle {
+						addr: wr_addr_receiver,
+						data: wr_data_receiver,
+						ack: ack_sender,
+					});
+					pmu.add_reader(PMUReadBundle {
+						addr: rd_addr_receiver,
+						resp: rd_data_sender,
+					});
+					parent.add_child(pmu);
+
+
+
+					
+					let mut rd_addr_gen = FunctionContext::new();
+					ack_receiver.attach_receiver(&rd_addr_gen);
+					rd_addr_sender.attach_sender(&rd_addr_gen);
+					let tmp = pmu_cycle_tmp * num_input;
+					rd_addr_gen.set_run(move |time| {
+						for idx in 0..tmp
+						{
+							ack_receiver.dequeue(time).unwrap();
+							let curr_time = time.tick();
+							rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
+						}
+					});
+					parent.add_child(rd_addr_gen);
+
+
+
+
+					
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+
+				} else if pmu_sender_vec_tmp[0] == no_connection
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pmu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let (sender, receiver) = parent.bounded(1024);
+					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
+					tmp_sender_vec.push(sender);
+					
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// parent.add_child(kernel);
+
+
+
+
+
+
+					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
+					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
+					let (ack_sender, ack_receiver) = parent.bounded(1024);
+					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
+					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_upstream);
+
+					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
+						num_vec_per_pmu,
+						Behavior {
+							mod_address: false,
+							use_default_value: false,
+						},
+					);
+					pmu.add_writer(PMUWriteBundle {
+						addr: wr_addr_receiver,
+						data: wr_data_receiver,
+						ack: ack_sender,
+					});
+					pmu.add_reader(PMUReadBundle {
+						addr: rd_addr_receiver,
+						resp: rd_data_sender,
+					});
+					parent.add_child(pmu);
+
+
+
+					
+					let mut rd_addr_gen = FunctionContext::new();
+					ack_receiver.attach_receiver(&rd_addr_gen);
+					rd_addr_sender.attach_sender(&rd_addr_gen);
+					let tmp = pmu_cycle_tmp * num_input;
+					rd_addr_gen.set_run(move |time| {
+						for idx in 0..tmp
+						{
+							ack_receiver.dequeue(time).unwrap();
+							let curr_time = time.tick();
+							rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
+						}
+					});
+					parent.add_child(rd_addr_gen);
+
+
+
+
+					
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+					let con = ConsumerContext::new(receiver);
+					parent.add_child(con);
+
+
+				} else if pmu_receiver_vec_tmp[0] == no_connection && pmu_sender_vec_tmp[0] == no_connection
+				{
+					panic!("Wrong!");
+
+
+				} else
+				{
+					let mut tmp_receiver_vec = vec![];
+					for k in 0..pmu_receiver_vec_tmp.len()
+					{
+						tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
+					}
+
+					let mut tmp_sender_vec = vec![];
+					for k in 0..pmu_sender_vec_tmp.len()
+					{
+						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+					}
+
+
+					
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// parent.add_child(kernel);
+
+					
+
+
+
+					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
+					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
+					let (ack_sender, ack_receiver) = parent.bounded(1024);
+					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
+					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_upstream);
+
+					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
+						num_vec_per_pmu,
+						Behavior {
+							mod_address: false,
+							use_default_value: false,
+						},
+					);
+					pmu.add_writer(PMUWriteBundle {
+						addr: wr_addr_receiver,
+						data: wr_data_receiver,
+						ack: ack_sender,
+					});
+					pmu.add_reader(PMUReadBundle {
+						addr: rd_addr_receiver,
+						resp: rd_data_sender,
+					});
+					parent.add_child(pmu);
+
+
+
+					
+					let mut rd_addr_gen = FunctionContext::new();
+					ack_receiver.attach_receiver(&rd_addr_gen);
+					rd_addr_sender.attach_sender(&rd_addr_gen);
+					let tmp = pmu_cycle_tmp * num_input;
+					rd_addr_gen.set_run(move |time| {
+						for idx in 0..tmp
+						{
+							ack_receiver.dequeue(time).unwrap();
+							let curr_time = time.tick();
+							rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
+						}
+					});
+					parent.add_child(rd_addr_gen);
+
+
+
+
+					
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp, dummy);
+					parent.add_child(pmu_adapter_downstream);
+
+
+
+
+
+
+
+
+
+				}
+			}
+
+
+
+
+
+
+
+			// NoC links
+			let mut sender_map_noc: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_noc: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Receiver<usize>> = HashMap::new();
+
+			for x in 0..x_dim
+			{
+				for y in 0..y_dim
+				{
+					if x == 0 && y == 0
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+					} else if x == 0 && y == y_dim-1
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+					} else if x == x_dim-1 && y == 0
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+					} else if x == x_dim-1 && y == y_dim-1
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+					} else if x == 0
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+					} else if x == x_dim-1
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+					} else if y == 0
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+					} else if y == y_dim-1
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+					} else
+					{
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+						let (sender, receiver) = parent.bounded(1);
+						sender_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+					}
+				}
+			}
+
+
+
+			// NoC routers
+			for x in 0..x_dim
+			{
+				for y in 0..y_dim
+				{
+					if x == 0 && y == 0
+					{
+						let S_in = receiver_map_noc.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+						let E_in = receiver_map_noc.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+						let S_out = sender_map_noc.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+						let E_out = sender_map_noc.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+						
+						let router = router_SE::new(S_in, E_in, S_out, E_out, num_input as usize, dummy);
+						parent.add_child(router);
+
+					} else if x == 0 && y == y_dim-1
+					{
+						let S_in = receiver_map_noc.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+						let W_in = receiver_map_noc.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+						let S_out = sender_map_noc.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+						let W_out = sender_map_noc.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+						
+						let router = router_SW::new(S_in, W_in, S_out, W_out, num_input as usize, dummy);
+						parent.add_child(router);
+
+					} else if x == x_dim-1 && y == 0
+					{
+						let N_in = receiver_map_noc.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+						let E_in = receiver_map_noc.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+						let N_out = sender_map_noc.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+						let E_out = sender_map_noc.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+						
+						let router = router_NE::new(N_in, E_in, N_out, E_out, num_input as usize, dummy);
+						parent.add_child(router);
+
+					} else if x == x_dim-1 && y == y_dim-1
+					{
+						let N_in = receiver_map_noc.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+						let W_in = receiver_map_noc.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+						let N_out = sender_map_noc.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+						let W_out = sender_map_noc.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+						
+						let router = router_NW::new(N_in, W_in, N_out, W_out, num_input as usize, dummy);
+						parent.add_child(router);
+
+					} else if x == 0
+					{
+						let S_in = receiver_map_noc.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+						let E_in = receiver_map_noc.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+						let W_in = receiver_map_noc.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+						let S_out = sender_map_noc.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+						let E_out = sender_map_noc.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+						let W_out = sender_map_noc.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+						let router = router_SEW::new(S_in, E_in, W_in, S_out, E_out, W_out, num_input as usize, dummy);
+						parent.add_child(router);
+
+					} else if x == x_dim-1
+					{
+						let N_in = receiver_map_noc.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+						let E_in = receiver_map_noc.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+						let W_in = receiver_map_noc.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+						let N_out = sender_map_noc.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+						let E_out = sender_map_noc.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+						let W_out = sender_map_noc.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+						let router = router_NEW::new(N_in, E_in, W_in, N_out, E_out, W_out, num_input as usize, dummy);
+						parent.add_child(router);
+
+					} else if y == 0
+					{
+						let N_in = receiver_map_noc.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+						let S_in = receiver_map_noc.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+						let E_in = receiver_map_noc.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+						let N_out = sender_map_noc.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+						let S_out = sender_map_noc.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+						let E_out = sender_map_noc.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+
+						let router = router_NSE::new(N_in, S_in, E_in, N_out, S_out, E_out, num_input as usize, dummy);
+						parent.add_child(router);
+
+					} else if y == y_dim-1
+					{
+						let N_in = receiver_map_noc.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+						let S_in = receiver_map_noc.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+						let W_in = receiver_map_noc.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+						let N_out = sender_map_noc.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+						let S_out = sender_map_noc.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+						let W_out = sender_map_noc.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+						let router = router_NSW::new(N_in, S_in, W_in, N_out, S_out, W_out, num_input as usize, dummy);
+						parent.add_child(router);
+
+					} else
+					{
+						let N_in = receiver_map_noc.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+						let S_in = receiver_map_noc.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+						let E_in = receiver_map_noc.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+						let W_in = receiver_map_noc.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+						let N_out = sender_map_noc.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+						let S_out = sender_map_noc.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+						let E_out = sender_map_noc.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+						let W_out = sender_map_noc.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+						// let router = router_NSEW::new(N_in, S_in, E_in, W_in, N_out, S_out, E_out, W_out, num_input as usize, dummy);
+						// parent.add_child(router);
+
+					}
+				}
+			}
+
+
+		
+			// run DAM
+			let initialized: dam::simulation::Initialized = parent
+			.initialize(
+				InitializationOptionsBuilder::default()
+					.run_flavor_inference(false)
+					.build()
+					.unwrap(),
+			)
+			.unwrap();
+			println!("{}", initialized.to_dot_string());
+
+
+			let executed = initialized.run(
+				RunOptionsBuilder::default()
+					.mode(RunMode::Simple)
+					.build()
+					.unwrap(),
+			);
+			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
+
+
+			let time = executed.elapsed_cycles().unwrap();
+			let time_tmp: f32 = time as f32 / num_input as f32;
+			experiment_time.push(time_tmp as usize);
+		}
+
+
+
+		
+
+
+
+
+
+
+		println!("\n\n\n\n\n\n\n");
 	}
 
 	println!("dfmodel_time {:?}", dfmodel_time);
 	println!("experiment_time {:?}", experiment_time);
 }
-
