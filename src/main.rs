@@ -32,16 +32,16 @@ use templates::router_SE::router_SE;
 use templates::router_SEW::router_SEW;
 use templates::router_SW::router_SW;
 
-#[derive(Debug, Default, Clone)]
-pub struct packet
-{
-    pub data: usize,
-    pub dst: usize,
-}
+// #[derive(Debug, Default, Clone)]
+// pub struct packet
+// {
+//     pub data: usize,
+//     pub dst: usize,
+// }
 
-impl StaticallySized for packet {
-    const SIZE: usize = mem::size_of::<packet>();
-}
+// impl StaticallySized for packet {
+//     const SIZE: usize = mem::size_of::<packet>();
+// }
 
 fn main() {
 	let dummy = 1;
@@ -157,12 +157,12 @@ fn main() {
 		println!("config: {}", i);
 
 
-		let mut connection_sender_type: Vec<String> = vec![];
-		let mut connection_sender_x: Vec<usize> = vec![];
-		let mut connection_sender_y: Vec<usize> = vec![];
-		let mut connection_receiver_type: Vec<String> = vec![];
-		let mut connection_receiver_x: Vec<usize> = vec![];
-		let mut connection_receiver_y: Vec<usize> = vec![];
+		let mut connection_first_type: Vec<String> = vec![];
+		let mut connection_first_x: Vec<usize> = vec![];
+		let mut connection_first_y: Vec<usize> = vec![];
+		let mut connection_second_type: Vec<String> = vec![];
+		let mut connection_second_x: Vec<usize> = vec![];
+		let mut connection_second_y: Vec<usize> = vec![];
 
 
 
@@ -177,12 +177,12 @@ fn main() {
 				let tmp4 = tmp[6].parse().unwrap();
 				let tmp5 = tmp[7].parse().unwrap();
 				let tmp6 = tmp[8].parse().unwrap();
-				connection_sender_type.push(tmp1);
-				connection_sender_x.push(tmp2);
-				connection_sender_y.push(tmp3);
-				connection_receiver_type.push(tmp4);
-				connection_receiver_x.push(tmp5);
-				connection_receiver_y.push(tmp6);
+				connection_first_type.push(tmp1);
+				connection_first_x.push(tmp2);
+				connection_first_y.push(tmp3);
+				connection_second_type.push(tmp4);
+				connection_second_x.push(tmp5);
+				connection_second_y.push(tmp6);
 			}	
 		}
 
@@ -374,7 +374,7 @@ fn main() {
 
 
 			// DRAM
-			let iter = || (0..(num_input)).map(|i| (i as usize) * 0_usize);
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 
 			let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
 			parent.add_child(input);
@@ -388,7 +388,7 @@ fn main() {
 
 
 			// network
-			let iter = || (0..(num_input)).map(|i| (i as usize) * 0_usize);
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 			let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
 			parent.add_child(input);
 
@@ -400,7 +400,7 @@ fn main() {
 
 
 			// on-chip compute
-			let iter = || (0..(num_input)).map(|i| (i as usize) * 0_usize);
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 			let input = GeneratorContext::new(iter, sender_map_comp.remove(&0).unwrap());
 			parent.add_child(input);
 
@@ -555,10 +555,20 @@ fn main() {
 				if pcu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pcu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pcu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pcu" && connection_first_x[connection_id] == pcu_x_tmp && connection_first_y[connection_id] == pcu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
 					}
+
 					let (sender, receiver) = parent.bounded(1024);
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
@@ -581,7 +591,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -604,7 +614,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -624,6 +634,8 @@ fn main() {
 					{
 						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
 					}
+					let mut tmp_dst_vec = vec![];
+					tmp_dst_vec.push(no_connection);
 
 					let (sender, receiver) = parent.bounded(1024);
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
@@ -643,7 +655,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -666,7 +678,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -675,10 +687,6 @@ fn main() {
 					} else {
 						panic!("Wrong!");
 					}
-
-
-
-
 
 					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
@@ -698,9 +706,18 @@ fn main() {
 					}
 
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pcu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pcu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pcu" && connection_first_x[connection_id] == pcu_x_tmp && connection_first_y[connection_id] == pcu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
 					}
 
 
@@ -716,7 +733,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -741,7 +758,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -881,19 +898,6 @@ fn main() {
 
 
 
-		/*
-
-
-
-
-
-
-
-
-
-		
-
-
 
 		if experiment == 3
 		{
@@ -990,10 +994,20 @@ fn main() {
 				if pcu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pcu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pcu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pcu" && connection_first_x[connection_id] == pcu_x_tmp && connection_first_y[connection_id] == pcu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
 					}
+
 					let (sender, receiver) = parent.bounded(1024);
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
@@ -1016,7 +1030,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -1039,7 +1053,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -1059,6 +1073,8 @@ fn main() {
 					{
 						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
 					}
+					let mut tmp_dst_vec = vec![];
+					tmp_dst_vec.push(no_connection);
 
 					let (sender, receiver) = parent.bounded(1024);
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
@@ -1078,7 +1094,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -1101,7 +1117,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -1110,10 +1126,6 @@ fn main() {
 					} else {
 						panic!("Wrong!");
 					}
-
-
-
-
 
 					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
@@ -1133,9 +1145,18 @@ fn main() {
 					}
 
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pcu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pcu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pcu" && connection_first_x[connection_id] == pcu_x_tmp && connection_first_y[connection_id] == pcu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
 					}
 
 
@@ -1151,7 +1172,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -1176,7 +1197,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -1222,9 +1243,20 @@ fn main() {
 				if pmu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pmu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pmu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pmu" && connection_first_x[connection_id] == pmu_x_tmp && connection_first_y[connection_id] == pmu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
+
+
 					}
 					let (sender, receiver) = parent.bounded(1024);
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
@@ -1290,7 +1322,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_counter_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -1313,6 +1345,10 @@ fn main() {
 					let (sender, receiver) = parent.bounded(1024);
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
+
+					let mut tmp_dst_vec = vec![];
+					tmp_dst_vec.push(no_connection);
+
 					
 					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
 					// parent.add_child(kernel);
@@ -1370,7 +1406,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_counter_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, tmp_dst_vec, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -1399,9 +1435,18 @@ fn main() {
 					}
 
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pmu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pmu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pmu" && connection_first_x[connection_id] == pmu_x_tmp && connection_first_y[connection_id] == pmu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
 					}
 
 
@@ -1461,7 +1506,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_counter_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -1504,11 +1549,6 @@ fn main() {
 			let time_tmp: f32 = time as f32 / num_input as f32;
 			experiment_time.push(time_tmp as usize);
 		}
-
-
-
-
-
 
 
 
@@ -1601,13 +1641,6 @@ fn main() {
 
 
 
-			
-
-
-
-
-
-
 			// compute tile
 			for j in 0..pcu_x.len()
 			{
@@ -1637,10 +1670,20 @@ fn main() {
 				if pcu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pcu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pcu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pcu" && connection_first_x[connection_id] == pcu_x_tmp && connection_first_y[connection_id] == pcu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
 					}
+
 					let (sender, receiver) = parent.bounded(1024);
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
@@ -1663,7 +1706,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -1686,7 +1729,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -1706,6 +1749,8 @@ fn main() {
 					{
 						tmp_receiver_vec.push(receiver_map.remove(&pcu_receiver_vec_tmp[k]).unwrap());
 					}
+					let mut tmp_dst_vec = vec![];
+					tmp_dst_vec.push(no_connection);
 
 					let (sender, receiver) = parent.bounded(1024);
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
@@ -1725,7 +1770,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -1748,7 +1793,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -1757,10 +1802,6 @@ fn main() {
 					} else {
 						panic!("Wrong!");
 					}
-
-
-
-
 
 					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
@@ -1780,9 +1821,18 @@ fn main() {
 					}
 
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pcu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pcu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pcu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pcu" && connection_first_x[connection_id] == pcu_x_tmp && connection_first_y[connection_id] == pcu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
 					}
 
 
@@ -1798,7 +1848,7 @@ fn main() {
 						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
 						parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, dummy);
+						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_downstream);
 
 					} else if simd_or_systolic == "Systolic"
@@ -1823,7 +1873,7 @@ fn main() {
 						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
 						parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_downstream);
 
 
@@ -1869,9 +1919,20 @@ fn main() {
 				if pmu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pmu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pmu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pmu" && connection_first_x[connection_id] == pmu_x_tmp && connection_first_y[connection_id] == pmu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
+
+
 					}
 					let (sender, receiver) = parent.bounded(1024);
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
@@ -1937,7 +1998,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_counter_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -1960,6 +2021,10 @@ fn main() {
 					let (sender, receiver) = parent.bounded(1024);
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
+
+					let mut tmp_dst_vec = vec![];
+					tmp_dst_vec.push(no_connection);
+
 					
 					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
 					// parent.add_child(kernel);
@@ -2017,7 +2082,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_counter_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, tmp_dst_vec, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -2046,9 +2111,18 @@ fn main() {
 					}
 
 					let mut tmp_sender_vec = vec![];
+					let mut tmp_dst_vec = vec![];
 					for k in 0..pmu_sender_vec_tmp.len()
 					{
-						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
+						let mut connection_id = pmu_sender_vec_tmp[k];
+						tmp_sender_vec.push(sender_map.remove(&connection_id).unwrap());
+
+						if connection_first_type[connection_id] == "pmu" && connection_first_x[connection_id] == pmu_x_tmp && connection_first_y[connection_id] == pmu_y_tmp
+						{
+							tmp_dst_vec.push(connection_second_x[connection_id] * y_dim + connection_second_y[connection_id]);
+						} else {
+							panic!("Wrong!");
+						}
 					}
 
 
@@ -2108,7 +2182,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_counter_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, tmp_dst_vec, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -2128,7 +2202,7 @@ fn main() {
 
 
 
-			// NoC links
+			// NoC links (not including local)
 			let mut sender_map_noc: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Sender<usize>> = HashMap::new();
 			let mut receiver_map_noc: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Receiver<usize>> = HashMap::new();
 
@@ -2398,9 +2472,6 @@ fn main() {
 
 		
 
-
-
-		*/
 
 
 		println!("\n\n\n\n\n\n\n");

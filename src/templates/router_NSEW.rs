@@ -16,9 +16,9 @@ pub struct router_NSEW<A: Clone> {
     pub out_S: Sender<usize>,
     pub out_E: Sender<usize>,
     pub out_W: Sender<usize>,
-    pub in_self: Vec<Receiver<usize>>,
+    pub in_local: Vec<Receiver<usize>>,
     pub in_len: usize,
-    pub out_self: Vec<Sender<usize>>,
+    pub out_local: Vec<Sender<usize>>,
     pub out_len: usize,
     pub loop_bound: usize,
     pub dummy: A,
@@ -37,9 +37,9 @@ router_NSEW<A>: Context,
         out_S: Sender<usize>,
         out_E: Sender<usize>,
         out_W: Sender<usize>,
-        in_self: Vec<Receiver<usize>>,
+        in_local: Vec<Receiver<usize>>,
         in_len: usize,
-        out_self: Vec<Sender<usize>>,
+        out_local: Vec<Sender<usize>>,
         out_len: usize,
         loop_bound: usize,
         dummy: A,
@@ -53,9 +53,9 @@ router_NSEW<A>: Context,
             out_S,
             out_E,
             out_W,
-            in_self,
+            in_local,
             in_len,
-            out_self,
+            out_local,
             out_len,
             loop_bound,
             dummy,
@@ -72,12 +72,12 @@ router_NSEW<A>: Context,
 
         for i in 0..in_len
         {
-            router_NSEW.in_self[i].attach_receiver(&router_NSEW);
+            router_NSEW.in_local[i].attach_receiver(&router_NSEW);
         }
         
         for i in 0..out_len
         {
-            router_NSEW.out_self[i].attach_sender(&router_NSEW);
+            router_NSEW.out_local[i].attach_sender(&router_NSEW);
         }
 
         router_NSEW
@@ -86,17 +86,23 @@ router_NSEW<A>: Context,
 
 impl<A: DAMType + num::Num> Context for router_NSEW<A> {
     fn run(&mut self) {
-        for _ in 0..self.loop_bound {
-            let in_N= self.in_N.dequeue(&self.time);
-            let in_S= self.in_S.dequeue(&self.time);
-            let in_E= self.in_E.dequeue(&self.time);
-            let in_W= self.in_W.dequeue(&self.time);
+        for i in 0..self.loop_bound {
+            let in_N= self.in_N.dequeue(&self.time).unwrap().data;
+            let in_S= self.in_S.dequeue(&self.time).unwrap().data;
+            let in_E= self.in_E.dequeue(&self.time).unwrap().data;
+            let in_W= self.in_W.dequeue(&self.time).unwrap().data;
+
+            for j in 0..self.in_len
+            {
+                let in_local = self.in_local[j].dequeue(&self.time).unwrap().data;
+            }
+            
 
             let curr_time = self.time.tick();
-            self.out_N.enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_S.unwrap().data.clone())).unwrap();
-            self.out_S.enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_N.unwrap().data.clone())).unwrap();
-            self.out_E.enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_W.unwrap().data.clone())).unwrap();
-            self.out_W.enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_E.unwrap().data.clone())).unwrap();
+            self.out_N.enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_S.clone())).unwrap();
+            self.out_S.enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_N.clone())).unwrap();
+            self.out_E.enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_W.clone())).unwrap();
+            self.out_W.enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_E.clone())).unwrap();
             self.time.incr_cycles(1);
         }
     }

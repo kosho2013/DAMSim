@@ -6,13 +6,10 @@ use dam::{
     types::DAMType,
 };
 
-use crate::packet;
-
-
 #[context_macro]
 pub struct kernel<A: Clone> {
-    pub in_stream: Receiver<packet>,
-    pub out_stream: Sender<packet>,
+    pub in_stream: Receiver<usize>,
+    pub out_stream: Sender<usize>,
     pub latency: usize,
     pub init_inverval: usize,
     pub loop_bound: usize,
@@ -24,8 +21,8 @@ where
 kernel<A>: Context,
 {
     pub fn new(
-        in_stream: Receiver<packet>,
-        out_stream: Sender<packet>,
+        in_stream: Receiver<usize>,
+        out_stream: Sender<usize>,
         latency: usize,
         init_inverval: usize,
         loop_bound: usize,

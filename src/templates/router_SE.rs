@@ -12,6 +12,10 @@ pub struct router_SE<A: Clone> {
     pub in_E: Receiver<usize>,
     pub out_S: Sender<usize>,
     pub out_E: Sender<usize>,
+    pub in_local: Vec<Receiver<usize>>,
+    pub in_len: usize,
+    pub out_local: Vec<Sender<usize>>,
+    pub out_len: usize,
     pub loop_bound: usize,
     pub dummy: A,
 }
@@ -25,6 +29,10 @@ router_SE<usize>: Context,
         in_E: Receiver<usize>,
         out_S: Sender<usize>,
         out_E: Sender<usize>,
+        in_local: Vec<Receiver<usize>>,
+        in_len: usize,
+        out_local: Vec<Sender<usize>>,
+        out_len: usize,
         loop_bound: usize,
         dummy: A,
     ) -> Self {
@@ -33,6 +41,10 @@ router_SE<usize>: Context,
             in_E,
             out_S,
             out_E,
+            in_local,
+            in_len,
+            out_local,
+            out_len,
             loop_bound,
             dummy,
             context_info: Default::default(),
@@ -41,6 +53,16 @@ router_SE<usize>: Context,
         router_SE.in_E.attach_receiver(&router_SE);
         router_SE.out_S.attach_sender(&router_SE);
         router_SE.out_E.attach_sender(&router_SE);
+
+        for i in 0..in_len
+        {
+            router_SE.in_local[i].attach_receiver(&router_SE);
+        }
+        
+        for i in 0..out_len
+        {
+            router_SE.out_local[i].attach_sender(&router_SE);
+        }
 
         router_SE
     }
