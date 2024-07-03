@@ -5,13 +5,14 @@ pub mod templates;
 pub mod utils;
 
 use std::collections::HashMap;
-use std::{env, process};
+use std::{env, mem, process};
 use std::{fs, time::Instant};
 use std::fs::{read_to_string, File};
 use std::io::{self, BufRead, BufReader};
 use dam::channel::{ChannelElement, Receiver};
 use dam::templates::datastore::Behavior;
 use dam::templates::pmu::{PMUReadBundle, PMUWriteBundle, PMU};
+use dam::types::StaticallySized;
 use dam::utility_contexts::{ConsumerContext, FunctionContext, GeneratorContext, PrinterContext};
 use proto_driver::proto_headers::setup::System;
 use prost::Message;
@@ -31,7 +32,16 @@ use templates::router_SE::router_SE;
 use templates::router_SEW::router_SEW;
 use templates::router_SW::router_SW;
 
+#[derive(Debug, Default, Clone)]
+pub struct packet
+{
+    pub data: usize,
+    pub dst: usize,
+}
 
+impl StaticallySized for packet {
+    const SIZE: usize = mem::size_of::<packet>();
+}
 
 fn main() {
 	let dummy = 1;
@@ -147,10 +157,39 @@ fn main() {
 		println!("config: {}", i);
 
 
+		let mut connection_sender_type: Vec<String> = vec![];
+		let mut connection_sender_x: Vec<usize> = vec![];
+		let mut connection_sender_y: Vec<usize> = vec![];
+		let mut connection_receiver_type: Vec<String> = vec![];
+		let mut connection_receiver_x: Vec<usize> = vec![];
+		let mut connection_receiver_y: Vec<usize> = vec![];
+
+
+
+		for line in lines.lines() {
+			let str = format!("connection config {}", i);
+			if line.starts_with(&str)
+			{
+				let tmp: Vec<&str> = line.split_whitespace().collect();
+				let tmp1 = tmp[3].parse().unwrap();
+				let tmp2 = tmp[4].parse().unwrap();
+				let tmp3 = tmp[5].parse().unwrap();
+				let tmp4 = tmp[6].parse().unwrap();
+				let tmp5 = tmp[7].parse().unwrap();
+				let tmp6 = tmp[8].parse().unwrap();
+				connection_sender_type.push(tmp1);
+				connection_sender_x.push(tmp2);
+				connection_sender_y.push(tmp3);
+				connection_receiver_type.push(tmp4);
+				connection_receiver_x.push(tmp5);
+				connection_receiver_y.push(tmp6);
+			}	
+		}
+
 
 		let mut pcu_x: Vec<usize> = vec![];
 		let mut pcu_y: Vec<usize> = vec![];
-		let mut pcu_cycle: Vec<usize> = vec![];
+		let mut pcu_counter: Vec<usize> = vec![];
 		let mut pcu_sender_vec: Vec<Vec<usize>> = vec![];
 		let mut pcu_receiver_vec: Vec<Vec<usize>> = vec![];
 
@@ -162,7 +201,7 @@ fn main() {
 
 		let mut pmu_x: Vec<usize> = vec![];
 		let mut pmu_y: Vec<usize> = vec![];
-		let mut pmu_cycle: Vec<usize> = vec![];
+		let mut pmu_counter: Vec<usize> = vec![];
 		let mut pmu_sender_vec: Vec<Vec<usize>>  = vec![];
 		let mut pmu_receiver_vec: Vec<Vec<usize>>  = vec![];
 
@@ -186,7 +225,7 @@ fn main() {
 
 				pcu_x.push(tmp[4].parse().unwrap());
 				pcu_y.push(tmp[5].parse().unwrap());
-				pcu_cycle.push(tmp[6].parse().unwrap());
+				pcu_counter.push(tmp[6].parse().unwrap());
 				pcu_SIMD_or_Systolic.push(tmp[7]);
 				pcu_M.push(tmp[8].parse().unwrap());
 				pcu_K.push(tmp[9].parse().unwrap());
@@ -224,7 +263,7 @@ fn main() {
 
 				pmu_x.push(tmp[4].parse().unwrap());
 				pmu_y.push(tmp[5].parse().unwrap());
-				pmu_cycle.push(tmp[6].parse().unwrap());
+				pmu_counter.push(tmp[6].parse().unwrap());
 
 				let str = "receiver";
 				let mut j = 8;
@@ -268,7 +307,7 @@ fn main() {
 		println!("kernel_latency{:?}", kernel_latency);
 		println!("pcu_x{:?}", pcu_x);
 		println!("pcu_y{:?}", pcu_y);
-		println!("pcu_cycle {:?}", pcu_cycle);
+		println!("pcu_counter {:?}", pcu_counter);
 		println!("pcu_sender_vec {:?}", pcu_sender_vec);
 		println!("pcu_receiver_vec {:?}", pcu_receiver_vec);
 
@@ -279,7 +318,7 @@ fn main() {
 
 		println!("pmu_x{:?}", pmu_x);
 		println!("pmu_y{:?}", pmu_y);
-		println!("pmu_cycle {:?}", pmu_cycle);
+		println!("pmu_counter {:?}", pmu_counter);
 		println!("pmu_sender_vec {:?}", pmu_sender_vec);
 		println!("pmu_receiver_vec {:?}", pmu_receiver_vec);
 
@@ -335,7 +374,8 @@ fn main() {
 
 
 			// DRAM
-			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 0_usize);
+
 			let input = GeneratorContext::new(iter, sender_map_mem.remove(&0).unwrap());
 			parent.add_child(input);
 
@@ -348,7 +388,7 @@ fn main() {
 
 
 			// network
-			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 0_usize);
 			let input = GeneratorContext::new(iter, sender_map_net.remove(&0).unwrap());
 			parent.add_child(input);
 
@@ -360,7 +400,7 @@ fn main() {
 
 
 			// on-chip compute
-			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
+			let iter = || (0..(num_input)).map(|i| (i as usize) * 0_usize);
 			let input = GeneratorContext::new(iter, sender_map_comp.remove(&0).unwrap());
 			parent.add_child(input);
 
@@ -402,6 +442,12 @@ fn main() {
 			experiment_time.push(time_tmp as usize);
 		}
 		
+
+
+
+
+
+
 
 
 
@@ -485,7 +531,7 @@ fn main() {
 			{
 				let mut pcu_x_tmp = pcu_x[j];
 				let mut pcu_y_tmp = pcu_y[j];
-				let mut pcu_cycle_tmp = pcu_cycle[j];
+				let mut pcu_counter_tmp = pcu_counter[j];
 				let mut pcu_sender_vec_tmp = vec![];
 				for n in 0..pcu_sender_vec[j].len()
 				{
@@ -540,7 +586,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -602,7 +648,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -675,7 +721,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -725,7 +771,7 @@ fn main() {
 			{
 				let mut pmu_x_tmp = pmu_x[j];
 				let mut pmu_y_tmp = pmu_y[j];
-				let mut pmu_cycle_tmp = pmu_cycle[j];
+				let mut pmu_counter_tmp = pmu_counter[j];
 				let mut pmu_sender_vec_tmp = vec![];
 				for n in 0..pmu_sender_vec[j].len()
 				{
@@ -754,7 +800,7 @@ fn main() {
 					let mut tmp_receiver_vec = vec![];
 					tmp_receiver_vec.push(receiver);
 					
-					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize, dummy);
+					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize, dummy);
 					parent.add_child(kernel);
 
 				} else if pmu_sender_vec_tmp[0] == no_connection
@@ -769,7 +815,7 @@ fn main() {
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
 					
-					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize, dummy);
+					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize, dummy);
 					parent.add_child(kernel);
 
 					let con = ConsumerContext::new(receiver);
@@ -794,7 +840,7 @@ fn main() {
 					{
 						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
 					}
-					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize, dummy);
+					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize, dummy);
 					parent.add_child(kernel);
 
 
@@ -835,7 +881,7 @@ fn main() {
 
 
 
-
+		/*
 
 
 
@@ -920,7 +966,7 @@ fn main() {
 			{
 				let mut pcu_x_tmp = pcu_x[j];
 				let mut pcu_y_tmp = pcu_y[j];
-				let mut pcu_cycle_tmp = pcu_cycle[j];
+				let mut pcu_counter_tmp = pcu_counter[j];
 				let mut pcu_sender_vec_tmp = vec![];
 				for n in 0..pcu_sender_vec[j].len()
 				{
@@ -975,7 +1021,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -1037,7 +1083,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -1110,7 +1156,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -1160,7 +1206,7 @@ fn main() {
 			{
 				let mut pmu_x_tmp = pmu_x[j];
 				let mut pmu_y_tmp = pmu_y[j];
-				let mut pmu_cycle_tmp = pmu_cycle[j];
+				let mut pmu_counter_tmp = pmu_counter[j];
 				let mut pmu_sender_vec_tmp = vec![];
 				for n in 0..pmu_sender_vec[j].len()
 				{
@@ -1189,7 +1235,7 @@ fn main() {
 					let mut tmp_receiver_vec = vec![];
 					tmp_receiver_vec.push(receiver);
 					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
 					// parent.add_child(kernel);
 
 
@@ -1202,7 +1248,7 @@ fn main() {
 					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
 					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
 
-					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
 
 					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
@@ -1229,7 +1275,7 @@ fn main() {
 					let mut rd_addr_gen = FunctionContext::new();
 					ack_receiver.attach_receiver(&rd_addr_gen);
 					rd_addr_sender.attach_sender(&rd_addr_gen);
-					let tmp = pmu_cycle_tmp * num_input;
+					let tmp = pmu_counter_tmp * num_input;
 					rd_addr_gen.set_run(move |time| {
 						for idx in 0..tmp
 						{
@@ -1244,7 +1290,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -1268,7 +1314,7 @@ fn main() {
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
 					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
 					// parent.add_child(kernel);
 
 
@@ -1282,7 +1328,7 @@ fn main() {
 					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
 					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
 
-					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
 
 					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
@@ -1309,7 +1355,7 @@ fn main() {
 					let mut rd_addr_gen = FunctionContext::new();
 					ack_receiver.attach_receiver(&rd_addr_gen);
 					rd_addr_sender.attach_sender(&rd_addr_gen);
-					let tmp = pmu_cycle_tmp * num_input;
+					let tmp = pmu_counter_tmp * num_input;
 					rd_addr_gen.set_run(move |time| {
 						for idx in 0..tmp
 						{
@@ -1324,7 +1370,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -1360,7 +1406,7 @@ fn main() {
 
 
 					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
 					// parent.add_child(kernel);
 
 					
@@ -1373,7 +1419,7 @@ fn main() {
 					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
 					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
 
-					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
 
 					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
@@ -1400,7 +1446,7 @@ fn main() {
 					let mut rd_addr_gen = FunctionContext::new();
 					ack_receiver.attach_receiver(&rd_addr_gen);
 					rd_addr_sender.attach_sender(&rd_addr_gen);
-					let tmp = pmu_cycle_tmp * num_input;
+					let tmp = pmu_counter_tmp * num_input;
 					rd_addr_gen.set_run(move |time| {
 						for idx in 0..tmp
 						{
@@ -1415,7 +1461,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -1567,7 +1613,7 @@ fn main() {
 			{
 				let mut pcu_x_tmp = pcu_x[j];
 				let mut pcu_y_tmp = pcu_y[j];
-				let mut pcu_cycle_tmp = pcu_cycle[j];
+				let mut pcu_counter_tmp = pcu_counter[j];
 				let mut pcu_sender_vec_tmp = vec![];
 				for n in 0..pcu_sender_vec[j].len()
 				{
@@ -1622,7 +1668,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -1684,7 +1730,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -1757,7 +1803,7 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_cycle_tmp as usize, pcu_cycle_tmp as usize, num_input as usize);
+						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
 						// parent.add_child(kernel);
 
 
@@ -1807,7 +1853,7 @@ fn main() {
 			{
 				let mut pmu_x_tmp = pmu_x[j];
 				let mut pmu_y_tmp = pmu_y[j];
-				let mut pmu_cycle_tmp = pmu_cycle[j];
+				let mut pmu_counter_tmp = pmu_counter[j];
 				let mut pmu_sender_vec_tmp = vec![];
 				for n in 0..pmu_sender_vec[j].len()
 				{
@@ -1836,7 +1882,7 @@ fn main() {
 					let mut tmp_receiver_vec = vec![];
 					tmp_receiver_vec.push(receiver);
 					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
 					// parent.add_child(kernel);
 
 
@@ -1849,7 +1895,7 @@ fn main() {
 					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
 					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
 
-					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
 
 					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
@@ -1876,7 +1922,7 @@ fn main() {
 					let mut rd_addr_gen = FunctionContext::new();
 					ack_receiver.attach_receiver(&rd_addr_gen);
 					rd_addr_sender.attach_sender(&rd_addr_gen);
-					let tmp = pmu_cycle_tmp * num_input;
+					let tmp = pmu_counter_tmp * num_input;
 					rd_addr_gen.set_run(move |time| {
 						for idx in 0..tmp
 						{
@@ -1891,7 +1937,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -1915,7 +1961,7 @@ fn main() {
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
 					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
 					// parent.add_child(kernel);
 
 
@@ -1929,7 +1975,7 @@ fn main() {
 					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
 					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
 
-					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
 
 					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
@@ -1956,7 +2002,7 @@ fn main() {
 					let mut rd_addr_gen = FunctionContext::new();
 					ack_receiver.attach_receiver(&rd_addr_gen);
 					rd_addr_sender.attach_sender(&rd_addr_gen);
-					let tmp = pmu_cycle_tmp * num_input;
+					let tmp = pmu_counter_tmp * num_input;
 					rd_addr_gen.set_run(move |time| {
 						for idx in 0..tmp
 						{
@@ -1971,7 +2017,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, 1, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -2007,7 +2053,7 @@ fn main() {
 
 
 					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_cycle_tmp as usize, pmu_cycle_tmp as usize, num_input as usize);
+					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
 					// parent.add_child(kernel);
 
 					
@@ -2020,7 +2066,7 @@ fn main() {
 					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
 					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
 
-					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
 
 					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
@@ -2047,7 +2093,7 @@ fn main() {
 					let mut rd_addr_gen = FunctionContext::new();
 					ack_receiver.attach_receiver(&rd_addr_gen);
 					rd_addr_sender.attach_sender(&rd_addr_gen);
-					let tmp = pmu_cycle_tmp * num_input;
+					let tmp = pmu_counter_tmp * num_input;
 					rd_addr_gen.set_run(move |time| {
 						for idx in 0..tmp
 						{
@@ -2062,7 +2108,7 @@ fn main() {
 
 
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_cycle_tmp, dummy);
+					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_downstream);
 
 
@@ -2354,7 +2400,7 @@ fn main() {
 
 
 
-
+		*/
 
 
 		println!("\n\n\n\n\n\n\n");

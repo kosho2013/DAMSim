@@ -3,10 +3,8 @@ pub mod kernel;
 
 pub mod my_pcu;
 pub mod pcu_adapter;
-
 pub mod pmu_adapter;
 
-pub mod router_adapter;
 pub mod router_NSEW;
 pub mod router_NSE;
 pub mod router_NSW;

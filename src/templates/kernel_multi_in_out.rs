@@ -1,10 +1,12 @@
 use dam::context_tools::*;
 
+use crate::packet;
+
 #[context_macro]
 pub struct kernel_multi_in_out<A: Clone> {
-    pub in_stream: Vec<Receiver<usize>>,
+    pub in_stream: Vec<Receiver<packet>>,
     pub in_len: usize,
-    pub out_stream: Vec<Sender<usize>>,
+    pub out_stream: Vec<Sender<packet>>,
     pub out_len: usize,
     pub latency: usize,
     pub init_inverval: usize,
@@ -17,9 +19,9 @@ where
 kernel_multi_in_out<A>: Context,
 {
     pub fn new(
-        in_stream: Vec<Receiver<usize>>,
+        in_stream: Vec<Receiver<packet>>,
         in_len: usize,
-        out_stream: Vec<Sender<usize>>,
+        out_stream: Vec<Sender<packet>>,
         out_len: usize,
         latency: usize,
         init_inverval: usize,

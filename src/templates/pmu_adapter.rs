@@ -6,13 +6,15 @@ use dam::{
     types::DAMType,
 };
 
+use crate::packet;
+
 
 #[context_macro]
 pub struct pmu_adapter_upstream<A: Clone> {
-    pub in_stream: Vec<Receiver<usize>>,
+    pub in_stream: Vec<Receiver<packet>>,
     pub in_len: usize,
     pub out_stream_wr_addr: Sender<usize>,
-    pub out_stream_wr_data: Sender<usize>,
+    pub out_stream_wr_data: Sender<packet>,
     pub loop_bound: usize,
     pub counter: usize,
     pub dummy: A,
@@ -23,10 +25,10 @@ where
 pmu_adapter_upstream<A>: Context,
 {
     pub fn new(
-        in_stream: Vec<Receiver<usize>>,
+        in_stream: Vec<Receiver<packet>>,
         in_len: usize,
         out_stream_wr_addr: Sender<usize>,
-        out_stream_wr_data: Sender<usize>,
+        out_stream_wr_data: Sender<packet>,
         loop_bound: usize,
         counter: usize,
         dummy: A,
@@ -88,8 +90,8 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_upstream<A> {
 
 #[context_macro]
 pub struct pmu_adapter_downstream<A: Clone> {
-    pub in_stream: Receiver<usize>,
-    pub out_stream: Vec<Sender<usize>>,
+    pub in_stream: Receiver<packet>,
+    pub out_stream: Vec<Sender<packet>>,
     pub out_len: usize,
     pub loop_bound: usize,
     pub counter: usize,
@@ -101,8 +103,8 @@ where
 pmu_adapter_downstream<A>: Context,
 {
     pub fn new(
-        in_stream: Receiver<usize>,
-        out_stream: Vec<Sender<usize>>,
+        in_stream: Receiver<packet>,
+        out_stream: Vec<Sender<packet>>,
         out_len: usize,
         loop_bound: usize,
         counter: usize,

@@ -1,4 +1,7 @@
+use std::mem;
+
 use dam::context_tools::*;
+use dam::types::StaticallySized;
 use dam::{
     channel::{Receiver, Sender},
     context::Context,
@@ -6,11 +9,13 @@ use dam::{
     types::DAMType,
 };
 
+use crate::packet;
+
 #[context_macro]
 pub struct simd_pcu_adapter_upstream<A: Clone> {
-    pub in_stream: Vec<Receiver<usize>>,
+    pub in_stream: Vec<Receiver<packet>>,
     pub in_len: usize,
-    pub out_stream: Sender<usize>,
+    pub out_stream: Sender<packet>,
     pub loop_bound: usize,
     pub m: usize,
     pub k: usize,
@@ -23,9 +28,9 @@ where
 simd_pcu_adapter_upstream<A>: Context,
 {
     pub fn new(
-        in_stream: Vec<Receiver<usize>>,
+        in_stream: Vec<Receiver<packet>>,
         in_len: usize,
-        out_stream: Sender<usize>,
+        out_stream: Sender<packet>,
         loop_bound: usize,
         m: usize,
         k: usize,
@@ -102,8 +107,8 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_upstream<A> {
 
 #[context_macro]
 pub struct simd_pcu_adapter_downstream<A: Clone> {
-    pub in_stream: Receiver<usize>,
-    pub out_stream: Vec<Sender<usize>>,
+    pub in_stream: Receiver<packet>,
+    pub out_stream: Vec<Sender<packet>>,
     pub out_len: usize,
     pub loop_bound: usize,
     pub m: usize,
@@ -117,8 +122,8 @@ where
 simd_pcu_adapter_downstream<A>: Context,
 {
     pub fn new(
-        in_stream: Receiver<usize>,
-        out_stream: Vec<Sender<usize>>,
+        in_stream: Receiver<packet>,
+        out_stream: Vec<Sender<packet>>,
         out_len: usize,
         loop_bound: usize,
         m: usize,
@@ -185,10 +190,10 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_downstream<A> {
 
 #[context_macro]
 pub struct systolic_pcu_adapter_upstream<A: Clone> {
-    pub in_stream: Vec<Receiver<usize>>,
+    pub in_stream: Vec<Receiver<packet>>,
     pub in_len: usize,
-    pub out_stream_lane: Sender<usize>,
-    pub out_stream_stage: Sender<usize>,
+    pub out_stream_lane: Sender<packet>,
+    pub out_stream_stage: Sender<packet>,
     pub loop_bound: usize,
     pub m: usize,
     pub k: usize,
@@ -203,10 +208,10 @@ where
 systolic_pcu_adapter_upstream<A>: Context,
 {
     pub fn new(
-        in_stream: Vec<Receiver<usize>>,
+        in_stream: Vec<Receiver<packet>>,
         in_len: usize,
-        out_stream_lane: Sender<usize>,
-        out_stream_stage: Sender<usize>,
+        out_stream_lane: Sender<packet>,
+        out_stream_stage: Sender<packet>,
         loop_bound: usize,
         m: usize,
         k: usize,
@@ -276,9 +281,9 @@ impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_upstream<A> {
 
 #[context_macro]
 pub struct systolic_pcu_adapter_downstream<A: Clone> {
-    pub in_stream_lane: Receiver<usize>,
-    pub in_stream_stage: Receiver<usize>,
-    pub out_stream: Vec<Sender<usize>>,
+    pub in_stream_lane: Receiver<packet>,
+    pub in_stream_stage: Receiver<packet>,
+    pub out_stream: Vec<Sender<packet>>,
     pub out_len: usize,
     pub loop_bound: usize,
     pub m: usize,
@@ -294,9 +299,9 @@ where
 systolic_pcu_adapter_downstream<A>: Context,
 {
     pub fn new(
-        in_stream_lane: Receiver<usize>,
-        in_stream_stage: Receiver<usize>,
-        out_stream: Vec<Sender<usize>>,
+        in_stream_lane: Receiver<packet>,
+        in_stream_stage: Receiver<packet>,
+        out_stream: Vec<Sender<packet>>,
         out_len: usize,
         loop_bound: usize,
         m: usize,
