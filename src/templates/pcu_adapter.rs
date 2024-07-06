@@ -170,6 +170,8 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_downstream<A> {
                     let idx: usize = j.try_into().unwrap();
                     self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time + 1, self.out_dst[j])).unwrap();
                     self.time.incr_cycles(1);
+
+                    println!("zzzzzzzzzzzzzzzzzzzzzzzzz");
                 }   
             }
         }
