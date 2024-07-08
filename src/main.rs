@@ -63,6 +63,8 @@ fn main() {
 	let word: usize = accelerator.word as usize;
 	let x_dim: usize = accelerator.x_dim as usize;
 	let y_dim: usize = accelerator.y_dim as usize;
+	let num_vc: usize = accelerator.num_vc as usize;
+	let buffer_depth: usize = accelerator.buffer_depth as usize;
 
 	let num_vec_per_pmu = sram_cap / lane_dim / word;
 	println!("num_vec_per_pmu {}", num_vec_per_pmu);
@@ -1627,9 +1629,9 @@ fn main() {
 
 
 
-			// NoC global links
-			let mut sender_map_noc_global: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Sender<usize>> = HashMap::new();
-			let mut receiver_map_noc_global: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Receiver<usize>> = HashMap::new();
+			// NoC global links for packet
+			let mut sender_map_noc_global_packet: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Sender<usize>> = HashMap::new();
+			let mut receiver_map_noc_global_packet: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Receiver<usize>> = HashMap::new();
 
 			for x in 0..x_dim
 			{
@@ -1638,121 +1640,248 @@ fn main() {
 					if x == 0 && y == 0
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
 
 					} else if x == 0 && y == y_dim-1
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
 
 					} else if x == x_dim-1 && y == 0
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
 
 					} else if x == x_dim-1 && y == y_dim-1
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
 
 					} else if x == 0
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
 
 					} else if x == x_dim-1
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
 
 					} else if y == 0
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
 
 					} else if y == y_dim-1
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
 
 					} else
 					{
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
 
 						let (sender, receiver) = parent.bounded(1);
-						sender_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
-						receiver_map_noc_global.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+						sender_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+						receiver_map_noc_global_packet.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
 					}
 				}
 			}
 
 
+
+
+			
+			// NoC global links for credit
+			// let mut sender_map_noc_global_credit: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Sender<usize>> = HashMap::new();
+			// let mut receiver_map_noc_global_credit: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Receiver<usize>> = HashMap::new();
+
+			// for x in 0..x_dim
+			// {
+			// 	for y in 0..y_dim
+			// 	{
+			// 		if x == 0 && y == 0
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+			// 		} else if x == 0 && y == y_dim-1
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+			// 		} else if x == x_dim-1 && y == 0
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+			// 		} else if x == x_dim-1 && y == y_dim-1
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+			// 		} else if x == 0
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+			// 		} else if x == x_dim-1
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+			// 		} else if y == 0
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+
+			// 		} else if y == y_dim-1
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+			// 		} else
+			// 		{
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "N".to_owned(), x-1, y, "S".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "S".to_owned(), x+1, y, "N".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "W".to_owned(), x, y-1, "E".to_owned()), receiver);
+
+			// 			let (sender, receiver) = parent.bounded(1);
+			// 			sender_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), sender);
+			// 			receiver_map_noc_global_credit.insert((x, y, "E".to_owned(), x, y+1, "W".to_owned()), receiver);
+			// 		}
+			// 	}
+			// }
 
 
 
@@ -1763,248 +1892,257 @@ fn main() {
 				let mut x = pcu_x[j];
 				let mut y = pcu_y[j];
 
-				let mut router_in_stream = vec![];
-				let mut router_in_direction: Vec<String> = vec![];
-				let mut router_out_stream = vec![];
-				let mut router_out_direction = vec![];
-
 				// router setup
-				let mut router_in_stream_len = 0;
-				let mut router_out_stream_len = 0;
+				let mut router_in_packet = vec![];
+				let mut router_in_packet_len = 0;
+				let mut router_in_direction: Vec<String> = vec![];
+				// let mut router_in_credit = vec![];
+				
+				let mut router_out_packet = vec![];
+				let mut router_out_packet_len = 0;
+				let mut router_out_direction = vec![];
+				// let mut router_out_credit = vec![];
 
+				
+				
+
+
+
+
+				// global links for packet
 				if x == 0 && y == 0
 				{
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 
-					router_in_stream.push(S_in);
-					router_in_stream.push(E_in);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(E_in_packet);
 					
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("E".to_owned());
 					
-					router_out_stream.push(S_out);
-					router_out_stream.push(E_out);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(E_out_packet);
 					
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("E".to_owned());
 
-					router_in_stream_len += 2;
-					router_out_stream_len += 2;
+					router_in_packet_len += 2;
+					router_out_packet_len += 2;
 
 				} else if x == 0 && y == y_dim-1
 				{
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(S_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(W_in_packet);
 					
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("W".to_owned());
 					
-					router_out_stream.push(S_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(W_out_packet);
 					
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 2;
-					router_out_stream_len += 2;
+					router_in_packet_len += 2;
+					router_out_packet_len += 2;
 
 				} else if x == x_dim-1 && y == 0
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(E_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(E_in_packet);
 					
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("E".to_owned());
 					
-					router_out_stream.push(N_out);
-					router_out_stream.push(E_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(E_out_packet);
 					
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("E".to_owned());
 
-					router_in_stream_len += 2;
-					router_out_stream_len += 2;
+					router_in_packet_len += 2;
+					router_out_packet_len += 2;
 
 				} else if x == x_dim-1 && y == y_dim-1
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(W_in_packet);
 					
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("W".to_owned());
 					
-					router_out_stream.push(N_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(W_out_packet);
 					
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 2;
-					router_out_stream_len += 2;
+					router_in_packet_len += 2;
+					router_out_packet_len += 2;
 
 				} else if x == 0
 				{
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(S_in);
-					router_in_stream.push(E_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(E_in_packet);
+					router_in_packet.push(W_in_packet);
 
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("E".to_owned());
 					router_in_direction.push("W".to_owned());
 
-					router_out_stream.push(S_out);
-					router_out_stream.push(E_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(E_out_packet);
+					router_out_packet.push(W_out_packet);
 
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("E".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 3;
-					router_out_stream_len += 3;
+					router_in_packet_len += 3;
+					router_out_packet_len += 3;
 
 				} else if x == x_dim-1
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(E_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(E_in_packet);
+					router_in_packet.push(W_in_packet);
 
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("E".to_owned());
 					router_in_direction.push("W".to_owned());
 
-					router_out_stream.push(N_out);
-					router_out_stream.push(E_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(E_out_packet);
+					router_out_packet.push(W_out_packet);
 
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("E".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 3;
-					router_out_stream_len += 3;
+					router_in_packet_len += 3;
+					router_out_packet_len += 3;
 
 				} else if y == 0
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(S_in);
-					router_in_stream.push(E_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(E_in_packet);
 
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("E".to_owned());
 
-					router_out_stream.push(N_out);
-					router_out_stream.push(S_out);
-					router_out_stream.push(E_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(E_out_packet);
 
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("E".to_owned());
 
-					router_in_stream_len += 3;
-					router_out_stream_len += 3;
+					router_in_packet_len += 3;
+					router_out_packet_len += 3;
 
 				} else if y == y_dim-1
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(S_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(W_in_packet);
 
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("W".to_owned());
 
-					router_out_stream.push(N_out);
-					router_out_stream.push(S_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(W_out_packet);
 
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 3;
-					router_out_stream_len += 3;
+					router_in_packet_len += 3;
+					router_out_packet_len += 3;
 
 				} else
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(S_in);
-					router_in_stream.push(E_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(E_in_packet);
+					router_in_packet.push(W_in_packet);
 
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("E".to_owned());
 					router_in_direction.push("W".to_owned());
 
-					router_out_stream.push(N_out);
-					router_out_stream.push(S_out);
-					router_out_stream.push(E_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(E_out_packet);
+					router_out_packet.push(W_out_packet);
 
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("E".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 4;
-					router_out_stream_len += 4;
+					router_in_packet_len += 4;
+					router_out_packet_len += 4;
 
 				}
 
@@ -2013,8 +2151,147 @@ fn main() {
 
 
 
+				// if x == 0 && y == 0
+				// {
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+					
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(E_out_credit);
 
+				// } else if x == 0 && y == y_dim-1
+				// {
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else if x == x_dim-1 && y == 0
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+					
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+
+				// } else if x == x_dim-1 && y == y_dim-1
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+					
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else if x == 0
+				// {
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else if x == x_dim-1
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else if y == 0
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+
+				// } else if y == y_dim-1
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+				// }
 
 
 
@@ -2117,11 +2394,11 @@ fn main() {
 					let to_router_adapter = to_router_adapter::new(router_receiver_vec, pcu_sender_vec_tmp.len(), sender, num_input, dummy);
 					parent.add_child(to_router_adapter);
 
-					router_in_stream.push(receiver);
+					router_in_packet.push(receiver);
 					router_in_direction.push("L".to_owned());
-					router_in_stream_len += 1;
+					router_in_packet_len += 1;
 
-					let router = router::new(router_in_stream, router_in_stream_len, router_in_direction, router_out_stream, router_out_stream_len, router_out_direction, num_input, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_packet, router_in_packet_len, router_in_direction, router_out_packet, router_out_packet_len, router_out_direction, num_input, x_dim, y_dim, x, y, num_vc, buffer_depth, dummy);
 					parent.add_child(router);
 
 
@@ -2197,11 +2474,11 @@ fn main() {
 
 
 					let (sender, receiver) = parent.bounded(1);
-					router_out_stream.push(sender);
+					router_out_packet.push(sender);
 					router_out_direction.push("L".to_owned());
-					router_out_stream_len += 1;
+					router_out_packet_len += 1;
 
-					let router = router::new(router_in_stream, router_in_stream_len, router_in_direction, router_out_stream, router_out_stream_len, router_out_direction, num_input, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_packet, router_in_packet_len, router_in_direction, router_out_packet, router_out_packet_len, router_out_direction, num_input, x_dim, y_dim, x, y, num_vc, buffer_depth, dummy);
 					parent.add_child(router);
 
 					let from_router_adapter = from_router_adapter::new(receiver, router_sender_vec, pcu_receiver_vec_tmp.len(), num_input, dummy);
@@ -2292,17 +2569,17 @@ fn main() {
 
 					let (sender1, receiver1) = parent.bounded(1);
 					let (sender2, receiver2) = parent.bounded(1);
-					router_in_stream.push(receiver1);
+					router_in_packet.push(receiver1);
 					router_in_direction.push("L".to_owned());
-					router_out_stream.push(sender2);
+					router_out_packet.push(sender2);
 					router_out_direction.push("L".to_owned());
-					router_in_stream_len += 1;
-					router_out_stream_len += 1;
+					router_in_packet_len += 1;
+					router_out_packet_len += 1;
 
 					let to_router_adapter = to_router_adapter::new(router_receiver_vec, pcu_sender_vec_tmp.len(), sender1, num_input, dummy);
 					parent.add_child(to_router_adapter);
 
-					let router = router::new(router_in_stream, router_in_stream_len, router_in_direction, router_out_stream, router_out_stream_len, router_out_direction, num_input, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_packet, router_in_packet_len, router_in_direction, router_out_packet, router_out_packet_len, router_out_direction, num_input, x_dim, y_dim, x, y, num_vc, buffer_depth, dummy);
 					parent.add_child(router);
 
 					let from_router_adapter = from_router_adapter::new(receiver2, router_sender_vec, pcu_receiver_vec_tmp.len(), num_input, dummy);
@@ -2324,253 +2601,403 @@ fn main() {
 			{
 				let mut x = pmu_x[j];
 				let mut y = pmu_y[j];
-
-				let mut router_in_stream = vec![];
-				let mut router_in_direction: Vec<String> = vec![];
-				let mut router_out_stream = vec![];
-				let mut router_out_direction = vec![];
-
+				
 				// router setup
-				let mut router_in_stream_len = 0;
-				let mut router_out_stream_len = 0;
+				let mut router_in_packet = vec![];
+				let mut router_in_packet_len = 0;
+				let mut router_in_direction: Vec<String> = vec![];
+				// let mut router_in_credit = vec![];
+				
+				let mut router_out_packet = vec![];
+				let mut router_out_packet_len = 0;
+				let mut router_out_direction = vec![];
+				// let mut router_out_credit = vec![];
+
+
 
 				if x == 0 && y == 0
 				{
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 
-					router_in_stream.push(S_in);
-					router_in_stream.push(E_in);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(E_in_packet);
 					
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("E".to_owned());
 					
-					router_out_stream.push(S_out);
-					router_out_stream.push(E_out);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(E_out_packet);
 					
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("E".to_owned());
 
-					router_in_stream_len += 2;
-					router_out_stream_len += 2;
+					router_in_packet_len += 2;
+					router_out_packet_len += 2;
 
 				} else if x == 0 && y == y_dim-1
 				{
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(S_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(W_in_packet);
 					
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("W".to_owned());
 					
-					router_out_stream.push(S_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(W_out_packet);
 					
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 2;
-					router_out_stream_len += 2;
+					router_in_packet_len += 2;
+					router_out_packet_len += 2;
 
 				} else if x == x_dim-1 && y == 0
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(E_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(E_in_packet);
 					
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("E".to_owned());
 					
-					router_out_stream.push(N_out);
-					router_out_stream.push(E_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(E_out_packet);
 					
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("E".to_owned());
 
-					router_in_stream_len += 2;
-					router_out_stream_len += 2;
+					router_in_packet_len += 2;
+					router_out_packet_len += 2;
 
 				} else if x == x_dim-1 && y == y_dim-1
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(W_in_packet);
 					
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("W".to_owned());
 					
-					router_out_stream.push(N_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(W_out_packet);
 					
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 2;
-					router_out_stream_len += 2;
+					router_in_packet_len += 2;
+					router_out_packet_len += 2;
 
 				} else if x == 0
 				{
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(S_in);
-					router_in_stream.push(E_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(E_in_packet);
+					router_in_packet.push(W_in_packet);
 
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("E".to_owned());
 					router_in_direction.push("W".to_owned());
 
-					router_out_stream.push(S_out);
-					router_out_stream.push(E_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(E_out_packet);
+					router_out_packet.push(W_out_packet);
 
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("E".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 3;
-					router_out_stream_len += 3;
+					router_in_packet_len += 3;
+					router_out_packet_len += 3;
 
 				} else if x == x_dim-1
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(E_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(E_in_packet);
+					router_in_packet.push(W_in_packet);
 
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("E".to_owned());
 					router_in_direction.push("W".to_owned());
 
-					router_out_stream.push(N_out);
-					router_out_stream.push(E_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(E_out_packet);
+					router_out_packet.push(W_out_packet);
 
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("E".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 3;
-					router_out_stream_len += 3;
+					router_in_packet_len += 3;
+					router_out_packet_len += 3;
 
 				} else if y == 0
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(S_in);
-					router_in_stream.push(E_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(E_in_packet);
 
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("E".to_owned());
 
-					router_out_stream.push(N_out);
-					router_out_stream.push(S_out);
-					router_out_stream.push(E_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(E_out_packet);
 
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("E".to_owned());
 
-					router_in_stream_len += 3;
-					router_out_stream_len += 3;
+					router_in_packet_len += 3;
+					router_out_packet_len += 3;
 
 				} else if y == y_dim-1
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(S_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(W_in_packet);
 
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("W".to_owned());
 
-					router_out_stream.push(N_out);
-					router_out_stream.push(S_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(W_out_packet);
 
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 3;
-					router_out_stream_len += 3;
+					router_in_packet_len += 3;
+					router_out_packet_len += 3;
 
 				} else
 				{
-					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
-					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
-					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
-					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
-					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
-					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
-					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
-					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+					let N_in_packet = receiver_map_noc_global_packet.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+					let S_in_packet = receiver_map_noc_global_packet.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+					let E_in_packet = receiver_map_noc_global_packet.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+					let W_in_packet = receiver_map_noc_global_packet.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+					let N_out_packet = sender_map_noc_global_packet.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+					let S_out_packet = sender_map_noc_global_packet.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+					let E_out_packet = sender_map_noc_global_packet.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+					let W_out_packet = sender_map_noc_global_packet.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
 
-					router_in_stream.push(N_in);
-					router_in_stream.push(S_in);
-					router_in_stream.push(E_in);
-					router_in_stream.push(W_in);
+					router_in_packet.push(N_in_packet);
+					router_in_packet.push(S_in_packet);
+					router_in_packet.push(E_in_packet);
+					router_in_packet.push(W_in_packet);
 
 					router_in_direction.push("N".to_owned());
 					router_in_direction.push("S".to_owned());
 					router_in_direction.push("E".to_owned());
 					router_in_direction.push("W".to_owned());
 
-					router_out_stream.push(N_out);
-					router_out_stream.push(S_out);
-					router_out_stream.push(E_out);
-					router_out_stream.push(W_out);
+					router_out_packet.push(N_out_packet);
+					router_out_packet.push(S_out_packet);
+					router_out_packet.push(E_out_packet);
+					router_out_packet.push(W_out_packet);
 
 					router_out_direction.push("N".to_owned());
 					router_out_direction.push("S".to_owned());
 					router_out_direction.push("E".to_owned());
 					router_out_direction.push("W".to_owned());
 
-					router_in_stream_len += 4;
-					router_out_stream_len += 4;
+					router_in_packet_len += 4;
+					router_out_packet_len += 4;
 
 				}
 
 
+
+
+
+
+
+				// if x == 0 && y == 0
+				// {
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+					
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+
+				// } else if x == 0 && y == y_dim-1
+				// {
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else if x == x_dim-1 && y == 0
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+					
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+
+				// } else if x == x_dim-1 && y == y_dim-1
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+					
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else if x == 0
+				// {
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else if x == x_dim-1
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else if y == 0
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+
+				// } else if y == y_dim-1
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+
+				// } else
+				// {
+				// 	let N_in_credit = receiver_map_noc_global_credit.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+				// 	let S_in_credit = receiver_map_noc_global_credit.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+				// 	let E_in_credit = receiver_map_noc_global_credit.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+				// 	let W_in_credit = receiver_map_noc_global_credit.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+				// 	let N_out_credit = sender_map_noc_global_credit.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+				// 	let S_out_credit = sender_map_noc_global_credit.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+				// 	let E_out_credit = sender_map_noc_global_credit.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+				// 	let W_out_credit = sender_map_noc_global_credit.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();
+
+				// 	router_in_credit.push(N_in_credit);
+				// 	router_in_credit.push(S_in_credit);
+				// 	router_in_credit.push(E_in_credit);
+				// 	router_in_credit.push(W_in_credit);
+
+				// 	router_out_credit.push(N_out_credit);
+				// 	router_out_credit.push(S_out_credit);
+				// 	router_out_credit.push(E_out_credit);
+				// 	router_out_credit.push(W_out_credit);
+				// }
 
 
 
@@ -2694,11 +3121,11 @@ fn main() {
 					let to_router_adapter = to_router_adapter::new(router_receiver_vec, pmu_sender_vec_tmp.len(), sender, num_input, dummy);
 					parent.add_child(to_router_adapter);
 
-					router_in_stream.push(receiver);
+					router_in_packet.push(receiver);
 					router_in_direction.push("L".to_owned());
-					router_in_stream_len += 1;
+					router_in_packet_len += 1;
 
-					let router = router::new(router_in_stream, router_in_stream_len, router_in_direction, router_out_stream, router_out_stream_len, router_out_direction, num_input, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_packet, router_in_packet_len, router_in_direction, router_out_packet, router_out_packet_len, router_out_direction, num_input, x_dim, y_dim, x, y, num_vc, buffer_depth, dummy);
 					parent.add_child(router);
 
 
@@ -2788,11 +3215,11 @@ fn main() {
 
 
 					let (sender, receiver) = parent.bounded(1);
-					router_out_stream.push(sender);
+					router_out_packet.push(sender);
 					router_out_direction.push("L".to_owned());
-					router_out_stream_len += 1;
+					router_out_packet_len += 1;
 
-					let router = router::new(router_in_stream, router_in_stream_len, router_in_direction, router_out_stream, router_out_stream_len, router_out_direction, num_input, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_packet, router_in_packet_len, router_in_direction, router_out_packet, router_out_packet_len, router_out_direction, num_input, x_dim, y_dim, x, y, num_vc, buffer_depth, dummy);
 					parent.add_child(router);
 
 					let from_router_adapter = from_router_adapter::new(receiver, router_sender_vec, pmu_receiver_vec_tmp.len(), num_input, dummy);
@@ -2898,17 +3325,17 @@ fn main() {
 
 					let (sender1, receiver1) = parent.bounded(1);
 					let (sender2, receiver2) = parent.bounded(1);
-					router_in_stream.push(receiver1);
+					router_in_packet.push(receiver1);
 					router_in_direction.push("L".to_owned());
-					router_out_stream.push(sender2);
+					router_out_packet.push(sender2);
 					router_out_direction.push("L".to_owned());
-					router_in_stream_len += 1;
-					router_out_stream_len += 1;
+					router_in_packet_len += 1;
+					router_out_packet_len += 1;
 
 					let to_router_adapter = to_router_adapter::new(router_receiver_vec, pmu_sender_vec_tmp.len(), sender1, num_input, dummy);
 					parent.add_child(to_router_adapter);
 
-					let router = router::new(router_in_stream, router_in_stream_len, router_in_direction, router_out_stream, router_out_stream_len, router_out_direction, num_input, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_packet, router_in_packet_len, router_in_direction, router_out_packet, router_out_packet_len, router_out_direction, num_input, x_dim, y_dim, x, y, num_vc, buffer_depth, dummy);
 					parent.add_child(router);
 
 					let from_router_adapter = from_router_adapter::new(receiver2, router_sender_vec, pmu_receiver_vec_tmp.len(), num_input, dummy);

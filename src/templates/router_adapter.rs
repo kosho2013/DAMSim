@@ -53,8 +53,6 @@ impl<A: DAMType + num::Num> Context for to_router_adapter<A> {
             {
                 let idx: usize = j.try_into().unwrap();
                 let in_data = self.in_stream[idx].dequeue(&self.time).unwrap().data;
-                
-                println!("xxxxxxxx");
 
                 let curr_time = self.time.tick();
                 self.out_stream.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();

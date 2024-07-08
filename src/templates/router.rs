@@ -11,14 +11,19 @@ pub struct router<A: Clone> {
     pub in_stream: Vec<Receiver<usize>>,
     pub in_len: usize,
     pub in_direction: Vec<String>,
+    // pub in_credit: Vec<Receiver<usize>>,
     pub out_stream: Vec<Sender<usize>>,
     pub out_len: usize,
     pub out_direction: Vec<String>,
+    // pub out_credit: Vec<Sender<usize>>,
     pub loop_bound: usize,
     pub x_dim: usize,
     pub y_dim: usize,
     pub x: usize,
     pub y: usize,
+    pub num_vc: usize,
+    pub buffer_depth: usize,
+
     pub dummy: A,
 }
 
@@ -30,29 +35,37 @@ router<A>: Context,
         in_stream: Vec<Receiver<usize>>,
         in_len: usize,
         in_direction: Vec<String>,
+        // in_credit: Vec<Receiver<usize>>,
         out_stream: Vec<Sender<usize>>,
         out_len: usize,
         out_direction: Vec<String>,
+        // out_credit: Vec<Sender<usize>>,
         loop_bound: usize,
         x_dim: usize,
         y_dim: usize,
         x: usize,
         y: usize,
+        num_vc: usize,
+        buffer_depth: usize, 
         dummy: A,
     ) -> Self {
         let router = router {
             in_stream,
             in_len,
             in_direction,
+            // in_credit,
             out_stream,
             out_len,
             out_direction,
+            // out_credit,
             loop_bound,
             dummy,
             x_dim,
             y_dim,
             x,
             y,
+            num_vc,
+            buffer_depth,
             context_info: Default::default(),
         };
         for i in 0..in_len
@@ -72,6 +85,9 @@ router<A>: Context,
 
 impl<A: DAMType + num::Num> Context for router<A> {
     fn run(&mut self) {
+
+        let mut buffer = vec![];
+
         let invalid = 999999;
 
         let mut in_N_idx = invalid;
@@ -164,13 +180,17 @@ impl<A: DAMType + num::Num> Context for router<A> {
         {
             for j in 0..self.in_len
             {
-                println!("bbb, {}, {}", self.x, self.y);
-
                 let next_data = self.in_stream[j].dequeue(&self.time).unwrap().data;
                 let dst_x = next_data / self.y_dim;
                 let dst_y = next_data % self.y_dim;
 
-                println!("aaa, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
+                buffer.push(next_data);
+
+                if buffer.len() == 0
+                {
+
+                }
+
 
                 if dst_x == self.x && dst_y == self.y // exit local port
                 {
@@ -183,8 +203,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.time.incr_cycles(1);
                     }
 
-                    println!("111, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
-                    
                 } else if dst_x == self.x && dst_y < self.y // exit W port
                 {
                     if out_W_idx == invalid
@@ -195,8 +213,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.out_stream[out_W_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
-
-                    println!("222, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
 
                 } else if dst_x < self.x && dst_y < self.y // exit N port
                 {
@@ -209,8 +225,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.time.incr_cycles(1);
                     }
 
-                    println!("333, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
-
                 } else if dst_x < self.x && dst_y == self.y // exit N port
                 {
                     if out_N_idx == invalid
@@ -221,8 +235,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.out_stream[out_N_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
-
-                    println!("444, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
 
                 } else if dst_x < self.x && dst_y > self.y // exit N port
                 {
@@ -235,7 +247,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.time.incr_cycles(1);
                     }
 
-                    println!("555, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
 
                 } else if dst_x == self.x && dst_y > self.y // exit E port
                 {
@@ -248,8 +259,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.time.incr_cycles(1);
                     }
 
-                    println!("666, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
-
                 } else if dst_x > self.x && dst_y > self.y // exit S port
                 {
                     if out_S_idx == invalid
@@ -260,8 +269,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.out_stream[out_S_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
-
-                    println!("777, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
 
                 } else if dst_x > self.x && dst_y == self.y // exit S port
                 {
@@ -274,8 +281,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.time.incr_cycles(1);
                     }
 
-                    println!("888, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
-
                 } else if dst_x > self.x && dst_y < self.y // exit S port
                 {
                     if out_S_idx == invalid
@@ -286,8 +291,6 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         self.out_stream[out_S_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
-
-                    println!("999, {}, {}, {}, {}", self.x, self.y, dst_x, dst_x);
                     
                 } else
                 {
