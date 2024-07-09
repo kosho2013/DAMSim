@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use dam::context_tools::*;
 use dam::{
     channel::{Receiver, Sender},
@@ -9,13 +11,11 @@ use dam::{
 #[context_macro]
 pub struct router<A: Clone> {
     pub in_stream: Vec<Receiver<usize>>,
+    pub in_dict: HashMap<String, usize>,
     pub in_len: usize,
-    pub in_direction: Vec<String>,
-    // pub in_credit: Vec<Receiver<usize>>,
     pub out_stream: Vec<Sender<usize>>,
+    pub out_dict: HashMap<String, usize>,
     pub out_len: usize,
-    pub out_direction: Vec<String>,
-    // pub out_credit: Vec<Sender<usize>>,
     pub loop_bound: usize,
     pub x_dim: usize,
     pub y_dim: usize,
@@ -23,7 +23,6 @@ pub struct router<A: Clone> {
     pub y: usize,
     pub num_vc: usize,
     pub buffer_depth: usize,
-
     pub dummy: A,
 }
 
@@ -33,13 +32,11 @@ router<A>: Context,
 {
     pub fn new(
         in_stream: Vec<Receiver<usize>>,
+        in_dict: HashMap<String, usize>,
         in_len: usize,
-        in_direction: Vec<String>,
-        // in_credit: Vec<Receiver<usize>>,
         out_stream: Vec<Sender<usize>>,
+        out_dict: HashMap<String, usize>,
         out_len: usize,
-        out_direction: Vec<String>,
-        // out_credit: Vec<Sender<usize>>,
         loop_bound: usize,
         x_dim: usize,
         y_dim: usize,
@@ -51,13 +48,11 @@ router<A>: Context,
     ) -> Self {
         let router = router {
             in_stream,
+            in_dict,
             in_len,
-            in_direction,
-            // in_credit,
             out_stream,
+            out_dict,
             out_len,
-            out_direction,
-            // out_credit,
             loop_bound,
             dummy,
             x_dim,
@@ -86,110 +81,93 @@ router<A>: Context,
 impl<A: DAMType + num::Num> Context for router<A> {
     fn run(&mut self) {
 
-        let mut buffer = vec![];
-
         let invalid = 999999;
 
-        let mut in_N_idx = invalid;
-        for i in 0..self.in_direction.len()
+        let mut N_in_packet_idx = invalid;
+        let mut S_in_packet_idx = invalid;
+        let mut E_in_packet_idx = invalid;
+        let mut W_in_packet_idx = invalid;
+        let mut L_in_packet_idx = invalid;
+
+        if self.in_dict.contains_key("N_in_packet")
         {
-            if self.in_direction[i] == "N"
-            {
-                in_N_idx = i;
-            }
+            N_in_packet_idx = self.in_dict["N_in_packet"];
         }
-        let mut in_S_idx = invalid;
-        for i in 0..self.in_direction.len()
+        if self.in_dict.contains_key("S_in_packet")
         {
-            if self.in_direction[i] == "S"
-            {
-                in_S_idx = i;
-            }
+            S_in_packet_idx = self.in_dict["S_in_packet"];
         }
-        let mut in_E_idx = invalid;
-        for i in 0..self.in_direction.len()
+        if self.in_dict.contains_key("E_in_packet")
         {
-            if self.in_direction[i] == "E"
-            {
-                in_E_idx = i;
-            }
+            E_in_packet_idx = self.in_dict["E_in_packet"];
         }
-        let mut in_W_idx = invalid;
-        for i in 0..self.in_direction.len()
+        if self.in_dict.contains_key("W_in_packet")
         {
-            if self.in_direction[i] == "W"
-            {
-                in_W_idx = i;
-            }
+            W_in_packet_idx = self.in_dict["W_in_packet"];
         }
-        let mut in_L_idx = invalid;
-        for i in 0..self.in_direction.len()
+        if self.in_dict.contains_key("L_in_packet")
         {
-            if self.in_direction[i] == "L"
-            {
-                in_L_idx = i;
-            }
+            L_in_packet_idx = self.in_dict["L_in_packet"];
         }
 
+        let mut N_out_packet_idx = invalid;
+        let mut S_out_packet_idx = invalid;
+        let mut E_out_packet_idx = invalid;
+        let mut W_out_packet_idx = invalid;
+        let mut L_out_packet_idx = invalid;
 
-
-
-        let mut out_N_idx = invalid;
-        for i in 0..self.out_direction.len()
+        if self.in_dict.contains_key("N_out_packet")
         {
-            if self.out_direction[i] == "N"
-            {
-                out_N_idx = i;
-            }
+            N_out_packet_idx = self.in_dict["N_out_packet"];
         }
-        let mut out_S_idx = invalid;
-        for i in 0..self.out_direction.len()
+        if self.in_dict.contains_key("S_out_packet")
         {
-            if self.out_direction[i] == "S"
-            {
-                out_S_idx = i;
-            }
+            S_out_packet_idx = self.in_dict["S_out_packet"];
         }
-        let mut out_E_idx = invalid;
-        for i in 0..self.out_direction.len()
+        if self.in_dict.contains_key("E_out_packet")
         {
-            if self.out_direction[i] == "E"
-            {
-                out_E_idx = i;
-            }
+            E_out_packet_idx = self.in_dict["E_out_packet"];
         }
-        let mut out_W_idx = invalid;
-        for i in 0..self.out_direction.len()
+        if self.in_dict.contains_key("W_out_packet")
         {
-            if self.out_direction[i] == "W"
-            {
-                out_W_idx = i;
-            }
+            W_out_packet_idx = self.in_dict["W_out_packet"];
         }
-        let mut out_L_idx = invalid;
-        for i in 0..self.out_direction.len()
+        if self.in_dict.contains_key("L_out_packet")
         {
-            if self.out_direction[i] == "L"
-            {
-                out_L_idx = i;
-            }
+            L_out_packet_idx = self.in_dict["L_out_packet"];
         }
-
 
         loop
         {
             for j in 0..self.in_len
             {
-                let next_data = self.in_stream[j].dequeue(&self.time).unwrap().data;
-                let dst_x = next_data / self.y_dim;
-                let dst_y = next_data % self.y_dim;
+                let in_data = self.in_stream[j].dequeue(&self.time).unwrap().data;
 
-                buffer.push(next_data);
-
-                if buffer.len() == 0
-                {
-
+                match in_data {
+                    Ok(value) => println!("Success: The result is {}", value),
+                    Err(error) => println!("Error: {}", error),
                 }
+
+                let dst_x = in_packet / self.y_dim;
+                let dst_y = in_packet % self.y_dim;
+
+                buffer.push(in_packet);
+
+
+                // receive credit
+                // for k in 0..self.in_packet_len-1
+                // {
+                //     let in_credit = self.in_credit[k].dequeue(&self.time).unwrap().data;
+                // }
+
+                // send credit
+                // for k in 0..self.in_packet_len-1
+                // {
+                //     let curr_time: dam::structures::Time = self.time.tick();
+                //     self.out_credit[k].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, buffer.len().clone())).unwrap();
+                //     self.time.incr_cycles(1);
+                // }
+
 
 
                 if dst_x == self.x && dst_y == self.y // exit local port
@@ -199,7 +177,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_L_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_L_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
 
@@ -210,7 +188,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_W_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_W_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
 
@@ -221,7 +199,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_N_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_N_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
 
@@ -232,7 +210,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_N_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_N_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
 
@@ -243,7 +221,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_N_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_N_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
 
@@ -255,7 +233,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_E_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_E_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
 
@@ -266,7 +244,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_S_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_S_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
 
@@ -277,7 +255,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_S_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_S_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
 
@@ -288,7 +266,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                         panic!("Wrong!");
                     } else {
                         let curr_time = self.time.tick();
-                        self.out_stream[out_S_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, next_data.clone())).unwrap();
+                        self.out_packet[out_S_idx].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, in_packet.clone())).unwrap();
                         self.time.incr_cycles(1);
                     }
                     
@@ -297,6 +275,9 @@ impl<A: DAMType + num::Num> Context for router<A> {
                     panic!("Wrong!");
                 }
 
+
+
+                
 
             }
         }
