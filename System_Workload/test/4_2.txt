@@ -53,8 +53,8 @@ digraph ProgramGraph {
     Node_18[shape="rectangle",label="pmu_adapter_upstream(ID_18)"]
     subgraph cluster_Node_21 {
         label="PMU(ID_21)"
-        Node_20[shape="rectangle",label="WritePipeline(ID_20)"]
         Node_19[shape="rectangle",label="ReadPipeline(ID_19)"]
+        Node_20[shape="rectangle",label="WritePipeline(ID_20)"]
     }
     Node_22[shape="rectangle",label="FunctionContext(ID_22)"]
     Node_23[shape="rectangle",label="pmu_adapter_downstream(ID_23)"]
@@ -64,8 +64,8 @@ digraph ProgramGraph {
     Node_27[shape="rectangle",label="pmu_adapter_upstream(ID_27)"]
     subgraph cluster_Node_30 {
         label="PMU(ID_30)"
-        Node_29[shape="rectangle",label="WritePipeline(ID_29)"]
         Node_28[shape="rectangle",label="ReadPipeline(ID_28)"]
+        Node_29[shape="rectangle",label="WritePipeline(ID_29)"]
     }
     Node_31[shape="rectangle",label="FunctionContext(ID_31)"]
     Node_32[shape="rectangle",label="pmu_adapter_downstream(ID_32)"]
