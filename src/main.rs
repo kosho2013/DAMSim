@@ -41,8 +41,6 @@ fn main() {
 	let dummy = 1;
 
 	let args: Vec<String> = env::args().collect();
-	println!("{:?}", args);
-
     let system_path = format!("{}{}", &args[1], "/system.bin");
 	let experiment_num_input = format!("{}", &args[2]);
 
@@ -55,24 +53,25 @@ fn main() {
         let file_contents = fs::read(system_path).unwrap();
         System::decode(file_contents.as_slice()).unwrap()
     };
-	println!("{:?}", system);
 
 	let accelerator = system.accelerator.unwrap();
-	let lane_dim: usize = accelerator.lane_dim as usize;
-	let stage_dim: usize = accelerator.stage_dim as usize;
-	let sram_cap: usize = accelerator.sram_cap as usize;
-	let word: usize = accelerator.word as usize;
+
 	let x_dim: usize = accelerator.x_dim as usize;
 	let y_dim: usize = accelerator.y_dim as usize;
+	let num_compute_tile: usize = accelerator.num_compute_tile as usize;
+	let num_memory_tile: usize = accelerator.num_memory_tile as usize;
+	let lane_dim: usize = accelerator.lane_dim as usize;
+	let stage_dim: usize = accelerator.stage_dim as usize;
+	let freq: f32 = accelerator.freq as f32;
+	let word: usize = accelerator.word as usize;
+	let sram_cap: usize = accelerator.sram_cap as usize;
+	let num_switch: usize = accelerator.num_switch as usize;
 	let num_vc: usize = accelerator.num_vc as usize;
 	let buffer_depth: usize = accelerator.buffer_depth as usize;
+	let dram_bw: f32 = accelerator.dram_bw as f32;
+	let net_bw: f32 = accelerator.net_bw as f32;
 
 	let num_vec_per_pmu = sram_cap / lane_dim / word;
-	println!("num_vec_per_pmu {}", num_vec_per_pmu);
-
-
-	println!("lane_dim {}", lane_dim);
-	println!("stage_dim {}", stage_dim);
 
 	let mut Memory_Latency = vec![];
 	let mut Network_Latency = vec![];
@@ -1707,8 +1706,8 @@ fn main() {
 				receiver_map_noc_global.insert(ele.clone(), receiver);
 			}
 
-			println!("sender_map_noc_global {:?}", sender_map_noc_global.keys());
-			println!("receiver_map_noc_global {:?}", receiver_map_noc_global.keys());
+			// println!("sender_map_noc_global {:?}", sender_map_noc_global.keys());
+			// println!("receiver_map_noc_global {:?}", receiver_map_noc_global.keys());
 
 
 
@@ -1904,9 +1903,9 @@ fn main() {
 
 
 
-					println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					println!();
+					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
+					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
+					// println!();
 
 
 
@@ -1985,9 +1984,9 @@ fn main() {
 
 
 
-					println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					println!();
+					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
+					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
+					// println!();
 
 
 
@@ -2091,9 +2090,9 @@ fn main() {
 
 
 
-					println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					println!();
+					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
+					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
+					// println!();
 
 
 
@@ -2337,9 +2336,9 @@ fn main() {
 
 
 
-					println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					println!();
+					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
+					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
+					// println!();
 
 
 
@@ -2438,9 +2437,9 @@ fn main() {
 
 
 
-					println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					println!();
+					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
+					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
+					// println!();
 
 
 
@@ -2559,9 +2558,9 @@ fn main() {
 
 
 
-					println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					println!();
+					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
+					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
+					// println!();
 
 
 
