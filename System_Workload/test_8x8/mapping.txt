@@ -1,0 +1,466 @@
+Set parameter Username
+Academic license - for non-commercial use only - expires 2024-11-05
+Set parameter NonConvex to value 2
+Set parameter MIPGap to value 0.001
+Set parameter Threads to value 144
+Gurobi Optimizer version 10.0.3 build v10.0.3rc0 (linux64)
+
+CPU model: Intel(R) Xeon(R) CPU E7-8890 v3 @ 2.50GHz, instruction set [SSE2|AVX|AVX2]
+Thread count: 72 physical cores, 144 logical processors, using up to 144 threads
+
+Optimize a model with 11 rows, 23 columns and 26 nonzeros
+Model fingerprint: 0xbc44cbb6
+Model has 2 quadratic constraints
+Model has 18 general constraints
+Variable types: 5 continuous, 18 integer (16 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  QMatrix range    [2e+00, 1e+05]
+  QLMatrix range   [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 3e+00]
+  RHS range        [1e+00, 1e+00]
+  GenCon rhs range [1e+00, 1e+05]
+  GenCon coe range [1e+00, 1e+00]
+Presolve removed 11 rows and 20 columns
+Presolve time: 0.00s
+Presolved: 4 rows, 4 columns, 9 nonzeros
+Variable types: 0 continuous, 4 integer (3 binary)
+Found heuristic solution: objective 0.0000000
+
+Explored 0 nodes (0 simplex iterations) in 0.01 seconds (0.00 work units)
+Thread count was 144 (of 144 available processors)
+
+Solution count 1: 0 
+
+Optimal solution found (tolerance 1.00e-03)
+Best objective 0.000000000000e+00, best bound 0.000000000000e+00, gap 0.0000%
+sharding[0,0] 0.0
+sharding[0,1] 0.0
+sharding[0,2] 0.0
+sharding[0,3] 0.0
+sharding[0,4] 1.0
+sharding[1,0] 0.0
+sharding[1,1] 1.0
+sharding[1,2] 0.0
+sharding[1,3] 0.0
+sharding[1,4] 0.0
+communication_type[0] 0.0
+communication_type[1] 0.0
+communication_size[0] 0.0
+communication_size[1] 0.0
+upstream_sharding[0,0] 1.0
+upstream_sharding[0,1] 0.0
+upstream_sharding[0,2] 0.0
+downstream_sharding[0,0] -0.0
+downstream_sharding[0,1] 0.0
+downstream_sharding[0,2] 1.0
+edge_communication_type[0] 0.0
+edge_communication_size[0] -0.0
+total_communication_size 0.0
+Set parameter Username
+Academic license - for non-commercial use only - expires 2024-11-05
+Set parameter NonConvex to value 2
+Set parameter Threads to value 144
+Set parameter MIPGap to value 1.0000000474974513e-03
+Set parameter TimeLimit to value 3600
+Gurobi Optimizer version 10.0.3 build v10.0.3rc0 (linux64)
+
+CPU model: Intel(R) Xeon(R) CPU E7-8890 v3 @ 2.50GHz, instruction set [SSE2|AVX|AVX2]
+Thread count: 72 physical cores, 144 logical processors, using up to 144 threads
+
+Optimize a model with 71 rows, 175 columns and 117 nonzeros
+Model fingerprint: 0xea4a43d2
+Model has 75 quadratic constraints
+Model has 45 general constraints
+Variable types: 99 continuous, 76 integer (28 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+01]
+  QMatrix range    [5e-02, 5e+01]
+  QLMatrix range   [1e+00, 5e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+12]
+  QRHS range       [1e+00, 4e+03]
+  GenCon rhs range [1e+00, 3e+01]
+  GenCon coe range [1e+00, 1e+00]
+Warning: Model contains large rhs
+         Consider reformulating model or setting NumericFocus parameter
+         to avoid numerical issues.
+Presolve removed 65 rows and 152 columns
+Presolve time: 0.00s
+Presolved: 36 rows, 24 columns, 83 nonzeros
+Presolved model has 2 SOS constraint(s)
+Presolved model has 3 quadratic constraint(s)
+Presolved model has 8 bilinear constraint(s)
+Variable types: 10 continuous, 14 integer (2 binary)
+
+Root relaxation: objective 1.092267e+05, 5 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 109226.667    0    -          - 109226.667      -     -    0s
+     0     0 223505.067    0    2          - 223505.067      -     -    0s
+H    0     0                    3713706.6667 223505.067  94.0%     -    0s
+     0     0 423254.527    0    2 3713706.67 423254.527  88.6%     -    0s
+H    0     0                    3495253.3333 423254.527  87.9%     -    0s
+     0     0 779997.054    0    2 3495253.33 779997.054  77.7%     -    0s
+     0     0 791561.752    0    1 3495253.33 791561.752  77.4%     -    0s
+     0     0 1032803.13    0    7 3495253.33 1032803.13  70.5%     -    0s
+     0     0 1081903.95    0   11 3495253.33 1081903.95  69.0%     -    0s
+     0     0 1083559.00    0   11 3495253.33 1083559.00  69.0%     -    0s
+     0     0 1093757.34    0   12 3495253.33 1093757.34  68.7%     -    0s
+     0     0 1094226.70    0   11 3495253.33 1094226.70  68.7%     -    0s
+     0     0 1100883.00    0    7 3495253.33 1100883.00  68.5%     -    0s
+     0     0 3203307.98    0    3 3495253.33 3203307.98  8.35%     -    0s
+     0     0 3203307.98    0    3 3495253.33 3203307.98  8.35%     -    0s
+     0     2 3203307.98    0    3 3495253.33 3203307.98  8.35%     -    0s
+
+Cutting planes:
+  MIR: 3
+
+Explored 15 nodes (76 simplex iterations) in 0.10 seconds (0.00 work units)
+Thread count was 144 (of 144 available processors)
+
+Solution count 2: 3.49525e+06 3.71371e+06 
+
+Optimal solution found (tolerance 1.00e-03)
+Best objective 3.495253333333e+06, best bound 3.495253333333e+06, gap 0.0000%
+TP 4.0
+PP 2.0
+DP 1.0
+num_copy 1.0
+num_chips_per_copy 8.0
+ALL_REDUCE_ratio 0.015
+ALL_TO_ALL_ratio 0.04
+ALL_GATHER_ratio 0.015
+ALL_REDUCE_PERIODIC_ratio 0.0
+P2P_ratio 0.02
+Shape[0] 4.0
+Shape[1] 2.0
+Link_BW[0] 50.0
+Link_BW[1] 50.0
+Link_BW_TP 50.0
+Link_BW_PP 50.0
+Link_BW_DP 0.0
+C17 200.0
+layer_per_stage 4.0
+layers 8.0
+tile_size 32.0
+num_tile 32.0
+shard_M[0] 256.0
+shard_M[1] 64.0
+shard_K[0] 1.0
+shard_K[1] 1.0
+shard_N[0] 8.0
+shard_N[1] 8.0
+shard_intermediate_buffer_size[0] 4096.0
+Micro_Batch_Size 512.0
+num_micro_batch_per_pipeline 8.0
+C31 512.0
+ALL_REDUCE_communication_size_node[0] 0.0
+ALL_REDUCE_communication_size_node[1] 0.0
+ALL_TO_ALL_communication_size_node[0] 0.0
+ALL_TO_ALL_communication_size_node[1] 0.0
+ALL_GATHER_communication_size_node[0] 0.0
+ALL_GATHER_communication_size_node[1] 0.0
+ALL_REDUCE_PERIODIC_communication_size_node[0] 0.0
+ALL_REDUCE_PERIODIC_communication_size_node[1] 0.0
+ALL_REDUCE_communication_size_edge[0] 0.0
+ALL_TO_ALL_communication_size_edge[0] 0.0
+ALL_GATHER_communication_size_edge[0] 0.0
+Config[0] 0.0
+Config[1] 0.0
+A[0,0] 1.0
+A[1,0] 1.0
+B[0,0] 1.0
+D[0,0] 0.0
+Z[0,0] 1.0
+E[0,0] 0.0
+H[0,0] 1.0
+Par_lane[0] 8.0
+Par_lane[1] 24.0
+Par_stage[0] 1.0
+Par_stage[1] 1.0
+Par_total[0] 8.0
+Par_total[1] 24.0
+C58 1.0
+C59 1.0
+C60 0.0
+C61 0.0
+C62 1.0
+C63 1.0
+C64 0.0
+C65 0.0
+C66 1.0
+C67 1.0
+C68 1.0
+C69 1.0
+C70 1.0
+C71 1.0
+C72 0.0
+C73 0.0
+shard_intermediate_buffer_size_depth_original[0] 16777216.0
+shard_intermediate_buffer_size_depth_two[0] 8192.0
+tiling_factor[0] 1.0
+tiling_factor[1] 1.0
+C78 0.0
+C79 0.0
+SRAM_Per_Config_total[0] 0.0
+SRAM_Per_Config_intermediate_dram[0] 0.0
+SRAM_Per_Config_intermediate_onchip[0] 0.0
+SRAM_Per_Config_initiation[0] 0.0
+PMU_used_intermediate[0] 32.0
+PMU_used_per_config[0] 32.0
+dram_bytes_per_config_intermediate[0] 0.0
+dram_bytes_per_config_initiation[0] 0.0
+C88 0.0
+dram_bytes_initiation 0.0
+dram_bytes_intermediate 0.0
+dram_bytes_total 0.0
+weight 0.0
+activation 0.0
+DRAM_BW 150.0
+Cycle[0] 8.0
+Cycle[1] 8.0
+m_factor[0] 1.0
+m_factor[1] 1.0
+n_factor[0] 1.0
+n_factor[1] 1.0
+MMM[0] 1.0
+MMM[1] 1.0
+KKK[0] 1.0
+KKK[1] 1.0
+NNN[0] 8.0
+NNN[1] 8.0
+Compute_Latency[0] 204.7999999999996
+C108 8.0
+C109 8.0
+C110 7.999999999999986
+Memory_Latency[0] 0.0
+memory_latency[0] 0.0
+explicit_memory_latency[0] 0.0
+C114 0.0
+Network_Latency[0] 0.0
+p2p_latency 0.0
+Network_Latency_ALL_REDUCE_node[0] 0.0
+C118 0.0
+C119 0.48
+Network_Latency_ALL_TO_ALL_node[0] 0.0
+C121 0.0
+C122 1.28
+Network_Latency_ALL_GATHER_node[0] 0.0
+C124 0.0
+C125 0.48
+Network_Latency_ALL_REDUCE_PERIODIC_node[0] 0.0
+C127 0.0
+C128 0.0
+Network_Latency_ALL_REDUCE_edge[0] 0.0
+C130 0.0
+C131 0.48
+Network_Latency_ALL_TO_ALL_edge[0] 0.0
+C133 0.0
+C134 1.28
+Network_Latency_ALL_GATHER_edge[0] 0.0
+C136 0.0
+C137 0.48
+Per_Config_II[0] 204.7999999999996
+C139 3495253.3333333284
+ns_per_batch 3495253.3333333284
+all_config_II 204.7999999999996
+C142 213.33333333333303
+C143 853.3333333333321
+C144 3495253.3333333284
+C145 0.04166666666666696
+pipeline_factor 1.041666666666667
+C147 3.0
+C148 0.125
+C149 0.0
+LINK_cost[0] 800.0
+LINK_cost[1] 800.0
+SWITCH_cost[0] 4800.0
+SWITCH_cost[1] 9600.0
+less_or_equal_one_chip 0.0
+less_or_equal_four_chip 0.0
+total_DRAM_cost 1200.0
+total_accelerator_cost 132178.0
+total_link_cost 1600.0
+total_switch_cost 14400.0
+C160 1600.0
+C161 14400.0
+total_cost 149378.0
+LINK_power[0] 20.800000429153442
+LINK_power[1] 20.800000429153442
+SWITCH_power[0] 10.400000214576721
+SWITCH_power[1] 20.800000429153442
+total_DRAM_power 194.97599601745605
+total_accelerator_power 3557.649658203125
+total_link_power 41.600000858306885
+total_switch_power 31.200000643730164
+C171 41.600000858306885
+C172 31.200000643730164
+total_power 3825.425655722618
+final_ns 3495253.3333333284
+------------Statistics------------
+TP 4.0
+PP 2.0
+DP 1.0
+final_s 0.003495253333333328
+Number of Chips 8
+Per-Accelerator Throughput (GFLOPS) 15360.0
+DRAM BW 150.0
+Link BW [50.0, 50.0]
+System Cost 149378.0
+System Power 3825.425655722618
+Workload FLOP 4294967296.0
+System FLOPS Utilization 0.010000000000000012
+Optimizer Runtime (s) 0.3512258529663086
+
+
+
+
+------------------- Config 0 -----------------------
+kernel latency config 0 8
+kernel latency config 0 8
+PCU array
+pcu config 0 GEMM1 0 1 7 SIMD 1 1 8 sender 0 1 2 3 receiver 999999 
+pcu config 0 GEMM1 0 3 7 SIMD 1 1 8 sender 4 5 6 7 receiver 999999 
+pcu config 0 GEMM1 0 5 7 SIMD 1 1 8 sender 8 9 10 11 receiver 999999 
+pcu config 0 GEMM1 0 7 7 SIMD 1 1 8 sender 12 13 14 15 receiver 999999 
+pcu config 0 GEMM1 1 0 7 SIMD 1 1 8 sender 16 17 18 19 receiver 999999 
+pcu config 0 GEMM1 1 2 7 SIMD 1 1 8 sender 20 21 22 23 receiver 999999 
+pcu config 0 GEMM1 1 4 7 SIMD 1 1 8 sender 24 25 26 27 receiver 999999 
+pcu config 0 GEMM1 1 6 7 SIMD 1 1 8 sender 28 29 30 31 receiver 999999 
+pcu config 0 GEMM2 2 1 7 SIMD 1 1 8 sender 999999 receiver 32 
+pcu config 0 GEMM2 2 3 7 SIMD 1 1 8 sender 999999 receiver 33 
+pcu config 0 GEMM2 2 5 7 SIMD 1 1 8 sender 999999 receiver 34 
+pcu config 0 GEMM2 2 7 7 SIMD 1 1 8 sender 999999 receiver 35 
+pcu config 0 GEMM2 3 0 7 SIMD 1 1 8 sender 999999 receiver 36 
+pcu config 0 GEMM2 3 2 7 SIMD 1 1 8 sender 999999 receiver 37 
+pcu config 0 GEMM2 3 4 7 SIMD 1 1 8 sender 999999 receiver 38 
+pcu config 0 GEMM2 3 6 7 SIMD 1 1 8 sender 999999 receiver 39 
+pcu config 0 GEMM2 4 1 7 SIMD 1 1 8 sender 999999 receiver 40 
+pcu config 0 GEMM2 4 3 7 SIMD 1 1 8 sender 999999 receiver 41 
+pcu config 0 GEMM2 4 5 7 SIMD 1 1 8 sender 999999 receiver 42 
+pcu config 0 GEMM2 4 7 7 SIMD 1 1 8 sender 999999 receiver 43 
+pcu config 0 GEMM2 5 0 7 SIMD 1 1 8 sender 999999 receiver 44 
+pcu config 0 GEMM2 5 2 7 SIMD 1 1 8 sender 999999 receiver 45 
+pcu config 0 GEMM2 5 4 7 SIMD 1 1 8 sender 999999 receiver 46 
+pcu config 0 GEMM2 5 6 7 SIMD 1 1 8 sender 999999 receiver 47 
+pcu config 0 GEMM2 6 1 7 SIMD 1 1 8 sender 999999 receiver 48 
+pcu config 0 GEMM2 6 3 7 SIMD 1 1 8 sender 999999 receiver 49 
+pcu config 0 GEMM2 6 5 7 SIMD 1 1 8 sender 999999 receiver 50 
+pcu config 0 GEMM2 6 7 7 SIMD 1 1 8 sender 999999 receiver 51 
+pcu config 0 GEMM2 7 0 7 SIMD 1 1 8 sender 999999 receiver 52 
+pcu config 0 GEMM2 7 2 7 SIMD 1 1 8 sender 999999 receiver 53 
+pcu config 0 GEMM2 7 4 7 SIMD 1 1 8 sender 999999 receiver 54 
+pcu config 0 GEMM2 7 6 7 SIMD 1 1 8 sender 999999 receiver 55 56 57 58 59 60 61 62 63 
+PMU array
+pmu config 0 GEMM1___GEMM2 0 0 7 sender 32 receiver 0 
+pmu config 0 GEMM1___GEMM2 0 2 7 sender 33 receiver 1 
+pmu config 0 GEMM1___GEMM2 0 4 7 sender 34 receiver 2 
+pmu config 0 GEMM1___GEMM2 0 6 7 sender 35 receiver 3 
+pmu config 0 GEMM1___GEMM2 1 1 7 sender 36 receiver 4 
+pmu config 0 GEMM1___GEMM2 1 3 7 sender 37 receiver 5 
+pmu config 0 GEMM1___GEMM2 1 5 7 sender 38 receiver 6 
+pmu config 0 GEMM1___GEMM2 1 7 7 sender 39 receiver 7 
+pmu config 0 GEMM1___GEMM2 2 0 7 sender 40 receiver 8 
+pmu config 0 GEMM1___GEMM2 2 2 7 sender 41 receiver 9 
+pmu config 0 GEMM1___GEMM2 2 4 7 sender 42 receiver 10 
+pmu config 0 GEMM1___GEMM2 2 6 7 sender 43 receiver 11 
+pmu config 0 GEMM1___GEMM2 3 1 7 sender 44 receiver 12 
+pmu config 0 GEMM1___GEMM2 3 3 7 sender 45 receiver 13 
+pmu config 0 GEMM1___GEMM2 3 5 7 sender 46 receiver 14 
+pmu config 0 GEMM1___GEMM2 3 7 7 sender 47 receiver 15 
+pmu config 0 GEMM1___GEMM2 4 0 7 sender 48 receiver 16 
+pmu config 0 GEMM1___GEMM2 4 2 7 sender 49 receiver 17 
+pmu config 0 GEMM1___GEMM2 4 4 7 sender 50 receiver 18 
+pmu config 0 GEMM1___GEMM2 4 6 7 sender 51 receiver 19 
+pmu config 0 GEMM1___GEMM2 5 1 7 sender 52 receiver 20 
+pmu config 0 GEMM1___GEMM2 5 3 7 sender 53 receiver 21 
+pmu config 0 GEMM1___GEMM2 5 5 7 sender 54 receiver 22 
+pmu config 0 GEMM1___GEMM2 5 7 7 sender 55 receiver 23 
+pmu config 0 GEMM1___GEMM2 6 0 7 sender 56 receiver 24 
+pmu config 0 GEMM1___GEMM2 6 2 7 sender 57 receiver 25 
+pmu config 0 GEMM1___GEMM2 6 4 7 sender 58 receiver 26 
+pmu config 0 GEMM1___GEMM2 6 6 7 sender 59 receiver 27 
+pmu config 0 GEMM1___GEMM2 7 1 7 sender 60 receiver 28 
+pmu config 0 GEMM1___GEMM2 7 3 7 sender 61 receiver 29 
+pmu config 0 GEMM1___GEMM2 7 5 7 sender 62 receiver 30 
+pmu config 0 GEMM1___GEMM2 7 7 7 sender 63 receiver 31 
+connection config 0 pcu 0 1 pmu 0 0
+connection config 0 pcu 0 1 pmu 0 2
+connection config 0 pcu 0 1 pmu 0 4
+connection config 0 pcu 0 1 pmu 0 6
+connection config 0 pcu 0 3 pmu 1 1
+connection config 0 pcu 0 3 pmu 1 3
+connection config 0 pcu 0 3 pmu 1 5
+connection config 0 pcu 0 3 pmu 1 7
+connection config 0 pcu 0 5 pmu 2 0
+connection config 0 pcu 0 5 pmu 2 2
+connection config 0 pcu 0 5 pmu 2 4
+connection config 0 pcu 0 5 pmu 2 6
+connection config 0 pcu 0 7 pmu 3 1
+connection config 0 pcu 0 7 pmu 3 3
+connection config 0 pcu 0 7 pmu 3 5
+connection config 0 pcu 0 7 pmu 3 7
+connection config 0 pcu 1 0 pmu 4 0
+connection config 0 pcu 1 0 pmu 4 2
+connection config 0 pcu 1 0 pmu 4 4
+connection config 0 pcu 1 0 pmu 4 6
+connection config 0 pcu 1 2 pmu 5 1
+connection config 0 pcu 1 2 pmu 5 3
+connection config 0 pcu 1 2 pmu 5 5
+connection config 0 pcu 1 2 pmu 5 7
+connection config 0 pcu 1 4 pmu 6 0
+connection config 0 pcu 1 4 pmu 6 2
+connection config 0 pcu 1 4 pmu 6 4
+connection config 0 pcu 1 4 pmu 6 6
+connection config 0 pcu 1 6 pmu 7 1
+connection config 0 pcu 1 6 pmu 7 3
+connection config 0 pcu 1 6 pmu 7 5
+connection config 0 pcu 1 6 pmu 7 7
+connection config 0 pmu 0 0 pcu 2 1
+connection config 0 pmu 0 2 pcu 2 3
+connection config 0 pmu 0 4 pcu 2 5
+connection config 0 pmu 0 6 pcu 2 7
+connection config 0 pmu 1 1 pcu 3 0
+connection config 0 pmu 1 3 pcu 3 2
+connection config 0 pmu 1 5 pcu 3 4
+connection config 0 pmu 1 7 pcu 3 6
+connection config 0 pmu 2 0 pcu 4 1
+connection config 0 pmu 2 2 pcu 4 3
+connection config 0 pmu 2 4 pcu 4 5
+connection config 0 pmu 2 6 pcu 4 7
+connection config 0 pmu 3 1 pcu 5 0
+connection config 0 pmu 3 3 pcu 5 2
+connection config 0 pmu 3 5 pcu 5 4
+connection config 0 pmu 3 7 pcu 5 6
+connection config 0 pmu 4 0 pcu 6 1
+connection config 0 pmu 4 2 pcu 6 3
+connection config 0 pmu 4 4 pcu 6 5
+connection config 0 pmu 4 6 pcu 6 7
+connection config 0 pmu 5 1 pcu 7 0
+connection config 0 pmu 5 3 pcu 7 2
+connection config 0 pmu 5 5 pcu 7 4
+connection config 0 pmu 5 7 pcu 7 6
+connection config 0 pmu 6 0 pcu 7 6
+connection config 0 pmu 6 2 pcu 7 6
+connection config 0 pmu 6 4 pcu 7 6
+connection config 0 pmu 6 6 pcu 7 6
+connection config 0 pmu 7 1 pcu 7 6
+connection config 0 pmu 7 3 pcu 7 6
+connection config 0 pmu 7 5 pcu 7 6
+connection config 0 pmu 7 7 pcu 7 6
+num_of_connections config 0 64
+connection_list length 64
+
+
+
+
+
+
+
+
+

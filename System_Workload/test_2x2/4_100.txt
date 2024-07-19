@@ -1,0 +1,33 @@
+Memory_Latency [0]
+Network_Latency [0]
+num_tile 32
+num_input 100
+num_config 1
+config: 0
+kernel_latency[64, 16]
+pcu_x[0, 1]
+pcu_y[1, 0]
+pcu_counter [63, 15]
+pcu_sender_vec [[0, 1], [999999]]
+pcu_receiver_vec [[999999], [2, 3]]
+pcu_SIMD_or_Systolic ["SIMD", "SIMD"]
+pcu_M [8, 2]
+pcu_K [1, 1]
+pcu_N [8, 8]
+pmu_x[0, 1]
+pmu_y[0, 1]
+pmu_counter [63, 63]
+pmu_sender_vec [[2], [3]]
+pmu_receiver_vec [[0], [1]]
+num_of_connections 4
+
+
+
+
+
+experiment 4 ***************************************************************************************
+used_link_map {(0, 1, "S", 1, 1, "N"): 1, (1, 1, "W", 1, 0, "E"): 1, (0, 0, "S", 1, 0, "N"): 1, (0, 1, "W", 0, 0, "E"): 1}
+
+
+
+

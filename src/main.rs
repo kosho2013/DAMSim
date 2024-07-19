@@ -14,7 +14,7 @@ use dam::channel::{ChannelElement, Receiver};
 use dam::templates::datastore::Behavior;
 use dam::templates::pmu::{PMUReadBundle, PMUWriteBundle, PMU};
 use dam::types::StaticallySized;
-use dam::utility_contexts::{ConsumerContext, FunctionContext, GeneratorContext, PrinterContext};
+use dam::utility_contexts::{PrinterContext, FunctionContext, GeneratorContext};
 use proto_driver::proto_headers::setup::System;
 use prost::Message;
 use dam::{logging::LogEvent, simulation::*};
@@ -26,18 +26,8 @@ use templates::pmu_adapter::{pmu_adapter_downstream, pmu_adapter_upstream};
 use templates::router::router;
 use templates::router_adapter::{from_router_adapter, to_router_adapter};
 
-// #[derive(Debug, Default, Clone)]
-// pub struct packet
-// {
-//     pub data: usize,
-//     pub dst: usize,
-// }
-
-// impl StaticallySized for packet {
-//     const SIZE: usize = mem::size_of::<packet>();
-// }
-
 fn main() {
+	let invalid = 999999;
 	let dummy = 1;
 
 	let args: Vec<String> = env::args().collect();
@@ -181,8 +171,18 @@ fn main() {
 			}	
 		}
 
+
+
+
+
+
+
+
+
+
+
 		// get which global NoC is used for routing
-		let mut used_link = HashSet::new();
+		let mut used_link_map = HashMap::new();
 		for j in 0..connection_first_x.len()
 		{
 			let mut curr_x = connection_first_x[j];
@@ -197,42 +197,106 @@ fn main() {
 					break;
 				} else if dst_x == curr_x && dst_y < curr_y // exit W port
 				{
-					used_link.insert((curr_x, curr_y, "W".to_owned(), curr_x, curr_y-1, "E".to_owned()));
+					let link = (curr_x, curr_y, "W".to_owned(), curr_x, curr_y-1, "E".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
 					curr_y -= 1;
 
 				} else if dst_x < curr_x && dst_y < curr_y // exit N port
 				{
-					used_link.insert((curr_x, curr_y, "N".to_owned(), curr_x-1, curr_y, "S".to_owned()));
+					let link = (curr_x, curr_y, "N".to_owned(), curr_x-1, curr_y, "S".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
 					curr_x -= 1;
 
 				} else if dst_x < curr_x && dst_y == curr_y // exit N port
 				{
-					used_link.insert((curr_x, curr_y, "N".to_owned(), curr_x-1, curr_y, "S".to_owned()));
+					let link = (curr_x, curr_y, "N".to_owned(), curr_x-1, curr_y, "S".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
 					curr_x -= 1;
 
 				} else if dst_x < curr_x && dst_y > curr_y // exit N port
 				{
-					used_link.insert((curr_x, curr_y, "N".to_owned(), curr_x-1, curr_y, "S".to_owned()));
+					let link = (curr_x, curr_y, "N".to_owned(), curr_x-1, curr_y, "S".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
 					curr_x -= 1;
 
 				} else if dst_x == curr_x && dst_y > curr_y // exit E port
 				{
-					used_link.insert((curr_x, curr_y, "E".to_owned(), curr_x, curr_y+1, "W".to_owned()));
+					let link = (curr_x, curr_y, "E".to_owned(), curr_x, curr_y+1, "W".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
 					curr_y += 1
 
 				} else if dst_x > curr_x && dst_y > curr_y // exit S port
 				{
-					used_link.insert((curr_x, curr_y, "S".to_owned(), curr_x+1, curr_y, "N".to_owned()));
+					let link = (curr_x, curr_y, "S".to_owned(), curr_x+1, curr_y, "N".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
 					curr_x += 1;
 
 				} else if dst_x > curr_x && dst_y == curr_y // exit S port
 				{
-					used_link.insert((curr_x, curr_y, "S".to_owned(), curr_x+1, curr_y, "N".to_owned()));
+					let link = (curr_x, curr_y, "S".to_owned(), curr_x+1, curr_y, "N".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
 					curr_x += 1;
 
 				} else if dst_x > curr_x && dst_y < curr_y // exit S port
 				{
-					used_link.insert((curr_x, curr_y, "S".to_owned(), curr_x+1, curr_y, "N".to_owned()));
+					let link = (curr_x, curr_y, "S".to_owned(), curr_x+1, curr_y, "N".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
 					curr_x += 1;
 
 				} else
@@ -240,7 +304,6 @@ fn main() {
 					panic!("Wrong!");
 				}
 			}
-			
 		}
 		
 
@@ -443,7 +506,7 @@ fn main() {
 			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(memory);
 
-			let output = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
+			let output = PrinterContext::new(receiver_map_mem.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -456,7 +519,7 @@ fn main() {
 			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(network);
 
-			let output = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
+			let output = PrinterContext::new(receiver_map_net.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -471,7 +534,7 @@ fn main() {
 				parent.add_child(compute);
 			}
 
-			let output = ConsumerContext::new(receiver_map_comp.remove(&num_kernel).unwrap());
+			let output = PrinterContext::new(receiver_map_comp.remove(&num_kernel).unwrap());
 			parent.add_child(output);
 
 
@@ -545,7 +608,7 @@ fn main() {
 			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(memory);
 
-			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
+			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_mem.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -567,7 +630,7 @@ fn main() {
 			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(network);
 
-			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
+			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_net.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -612,7 +675,7 @@ fn main() {
 
 
 
-				let no_connection = 999999;
+				let no_connection = invalid;
 				if pcu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
@@ -657,9 +720,6 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
-						// parent.add_child(kernel);
-
 
 						let (sender1, receiver1) = parent.bounded(1024);
 						let (sender2, receiver2) = parent.bounded(1024);
@@ -721,9 +781,6 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
-						// parent.add_child(kernel);
-
 
 						let (sender1, receiver1) = parent.bounded(1024);
 						let (sender2, receiver2) = parent.bounded(1024);
@@ -749,7 +806,7 @@ fn main() {
 						panic!("Wrong!");
 					}
 
-					let con = ConsumerContext::new(receiver);
+					let con = PrinterContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -799,10 +856,6 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
-						// parent.add_child(kernel);
-
-
 
 
 						let (sender1, receiver1) = parent.bounded(1024);
@@ -861,7 +914,7 @@ fn main() {
 					pmu_receiver_vec_tmp.push(pmu_receiver_vec[j][n]);
 				}
 				
-				let no_connection = 999999;
+				let no_connection = invalid;
 				if pmu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
@@ -896,7 +949,7 @@ fn main() {
 					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize, dummy);
 					parent.add_child(kernel);
 
-					let con = ConsumerContext::new(receiver);
+					let con = PrinterContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -984,7 +1037,7 @@ fn main() {
 			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(memory);
 
-			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
+			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_mem.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -1006,7 +1059,7 @@ fn main() {
 			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(network);
 
-			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
+			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_net.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -1051,7 +1104,7 @@ fn main() {
 
 
 
-				let no_connection = 999999;
+				let no_connection = invalid;
 				if pcu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
@@ -1096,9 +1149,6 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
-						// parent.add_child(kernel);
-
 
 						let (sender1, receiver1) = parent.bounded(1024);
 						let (sender2, receiver2) = parent.bounded(1024);
@@ -1160,9 +1210,6 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
-						// parent.add_child(kernel);
-
 
 						let (sender1, receiver1) = parent.bounded(1024);
 						let (sender2, receiver2) = parent.bounded(1024);
@@ -1188,7 +1235,7 @@ fn main() {
 						panic!("Wrong!");
 					}
 
-					let con = ConsumerContext::new(receiver);
+					let con = PrinterContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -1238,11 +1285,6 @@ fn main() {
 
 					} else if simd_or_systolic == "Systolic"
 					{
-						// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pcu_sender_vec_tmp.len() as usize, pcu_counter_tmp as usize, pcu_counter_tmp as usize, num_input as usize);
-						// parent.add_child(kernel);
-
-
-
 
 						let (sender1, receiver1) = parent.bounded(1024);
 						let (sender2, receiver2) = parent.bounded(1024);
@@ -1300,7 +1342,7 @@ fn main() {
 					pmu_receiver_vec_tmp.push(pmu_receiver_vec[j][n]);
 				}
 				
-				let no_connection = 999999;
+				let no_connection = invalid;
 				if pmu_receiver_vec_tmp[0] == no_connection
 				{
 					let mut tmp_sender_vec = vec![];
@@ -1328,10 +1370,6 @@ fn main() {
 					let mut tmp_receiver_vec = vec![];
 					tmp_receiver_vec.push(receiver);
 					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, 1, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-
 
 
 
@@ -1411,10 +1449,6 @@ fn main() {
 					tmp_dst_vec.push(no_connection);
 
 					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-
 
 
 
@@ -1478,7 +1512,7 @@ fn main() {
 
 
 
-					let con = ConsumerContext::new(receiver);
+					let con = PrinterContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -1509,13 +1543,6 @@ fn main() {
 							panic!("Wrong!");
 						}
 					}
-
-
-					
-					// let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, pmu_sender_vec_tmp.len() as usize, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize);
-					// parent.add_child(kernel);
-
-					
 
 
 
@@ -1660,7 +1687,7 @@ fn main() {
 			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(memory);
 
-			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
+			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_mem.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -1682,7 +1709,7 @@ fn main() {
 			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(network);
 
-			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
+			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_net.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -1699,15 +1726,63 @@ fn main() {
 			let mut sender_map_noc_global: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Sender<usize>> = HashMap::new();
 			let mut receiver_map_noc_global: HashMap<(usize, usize, String, usize, usize, String), dam::channel::Receiver<usize>> = HashMap::new();
 
-			for ele in used_link
+			for ele in used_link_map.keys()
 			{
 				let (sender, receiver) = parent.bounded(buffer_depth);
 				sender_map_noc_global.insert(ele.clone(), sender);
 				receiver_map_noc_global.insert(ele.clone(), receiver);
 			}
 
-			// println!("sender_map_noc_global {:?}", sender_map_noc_global.keys());
-			// println!("receiver_map_noc_global {:?}", receiver_map_noc_global.keys());
+			println!("used_link_map {:?}", used_link_map);
+			println!("\n\n\n");
+
+
+
+
+			// check critical input ports
+			// NSEWL
+			// let mut critical_input_ports_map = HashMap::new();
+
+			// for x in 0..x_dim
+			// {
+			// 	for y in 0..y_dim
+			// 	{
+			// 		let mut tmp1 = vec![];
+			// 		let mut tmp2 = vec![];
+
+			// 		if receiver_map_noc_global.contains_key(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())) && receiver_map_noc_global.contains_key(&(x, y, "N".to_owned(), x-1, y, "S".to_owned()))
+			// 		{
+			// 			tmp1.push("N_in".to_owned());
+			// 			tmp2.push(used_link_map[&(x-1, y, "S".to_owned(), x, y, "N".to_owned())]);
+			// 		}
+					
+			// 		if receiver_map_noc_global.contains_key(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())) && receiver_map_noc_global.contains_key(&(x, y, "S".to_owned(), x+1, y, "N".to_owned()))
+			// 		{
+			// 			tmp1.push("S_in".to_owned());
+			// 			tmp2.push(used_link_map[&(x+1, y, "N".to_owned(), x, y, "S".to_owned())]);
+			// 		}
+
+			// 		if receiver_map_noc_global.contains_key(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())) && receiver_map_noc_global.contains_key(&(x, y, "W".to_owned(), x, y-1, "E".to_owned()))
+			// 		{
+			// 			tmp1.push("W_in".to_owned());
+			// 			tmp2.push(used_link_map[&(x, y-1, "E".to_owned(), x, y, "W".to_owned())]);
+			// 		}
+
+			// 		if receiver_map_noc_global.contains_key(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())) && receiver_map_noc_global.contains_key(&(x, y, "E".to_owned(), x, y+1, "W".to_owned()))
+			// 		{
+			// 			tmp1.push("E_in".to_owned());
+			// 			tmp2.push(used_link_map[&(x, y+1, "W".to_owned(), x, y, "E".to_owned())]);
+			// 		}
+
+			// 		critical_input_ports_map.insert((x, y), (tmp1, tmp2));
+			// 	}
+			// }
+				
+			// println!("critical_input_ports_map{:?}", critical_input_ports_map);
+			// println!("\n\n\n");
+
+
+
 
 
 
@@ -1719,7 +1794,7 @@ fn main() {
 
 				// router setup
 				let mut router_in_stream = vec![];
-				let mut router_in_dict: HashMap<String, usize> = HashMap::new();
+				let mut router_in_dict: HashMap<String, (usize, usize)> = HashMap::new();
 				let mut router_in_len = 0;
 				
 				let mut router_out_stream = vec![];
@@ -1727,12 +1802,20 @@ fn main() {
 				let mut router_out_len = 0;
 
 
+				
+
+
+
+
+
 				// global links
 				if receiver_map_noc_global.contains_key(&(x-1, y, "S".to_owned(), x, y, "N".to_owned()))
 				{
 					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
 					router_in_stream.push(N_in);
-					router_in_dict.insert("N_in".to_owned(), router_in_len);
+					
+					let tmp = used_link_map[&(x-1, y, "S".to_owned(), x, y, "N".to_owned())];
+					router_in_dict.insert("N_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 				}
 				
@@ -1740,7 +1823,9 @@ fn main() {
 				{
 					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
 					router_in_stream.push(S_in);
-					router_in_dict.insert("S_in".to_owned(), router_in_len);
+
+					let tmp = used_link_map[&(x+1, y, "N".to_owned(), x, y, "S".to_owned())];
+					router_in_dict.insert("S_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 				}
 				
@@ -1748,7 +1833,9 @@ fn main() {
 				{
 					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
 					router_in_stream.push(E_in);
-					router_in_dict.insert("E_in".to_owned(), router_in_len);
+
+					let tmp = used_link_map[&(x, y+1, "W".to_owned(), x, y, "E".to_owned())];
+					router_in_dict.insert("E_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 				}
 				
@@ -1756,7 +1843,9 @@ fn main() {
 				{
 					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
 					router_in_stream.push(W_in);
-					router_in_dict.insert("W_in".to_owned(), router_in_len);
+
+					let tmp = used_link_map[&(x, y-1, "E".to_owned(), x, y, "W".to_owned())];
+					router_in_dict.insert("W_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 				}
 				
@@ -1764,6 +1853,7 @@ fn main() {
 				{
 					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
 					router_out_stream.push(N_out);
+
 					router_out_dict.insert("N_out".to_owned(), router_out_len);
 					router_out_len += 1;
 				}
@@ -1780,6 +1870,7 @@ fn main() {
 				{
 					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 					router_out_stream.push(E_out);
+
 					router_out_dict.insert("E_out".to_owned(), router_out_len);
 					router_out_len += 1;
 				}
@@ -1788,6 +1879,7 @@ fn main() {
 				{
 					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();	
 					router_out_stream.push(W_out);
+
 					router_out_dict.insert("W_out".to_owned(), router_out_len);
 					router_out_len += 1;
 				}
@@ -1795,6 +1887,9 @@ fn main() {
 
 
 				
+				
+
+
 
 
 
@@ -1818,7 +1913,7 @@ fn main() {
 
 
 
-				let no_connection = 999999;
+				let no_connection = invalid;
 				if pcu_receiver_vec_tmp[0] == no_connection
 				{
 
@@ -1898,16 +1993,8 @@ fn main() {
 					parent.add_child(to_router_adapter);
 
 					router_in_stream.push(receiver);
-					router_in_dict.insert("L_in".to_owned(), router_in_len);
+					router_in_dict.insert("L_in".to_owned(), (router_in_len, invalid));
 					router_in_len += 1;
-
-
-
-					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					// println!();
-
-
 
 
 					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
@@ -1916,60 +2003,58 @@ fn main() {
 
 				} else if pcu_sender_vec_tmp[0] == no_connection
 				{
-					let mut router_sender_vec = vec![];
-					let mut tile_receiver_vec = vec![];
-					let mut tile_sender_vec = vec![];
-					let mut tile_dst_vec = vec![];
-					for k in 0..pcu_receiver_vec_tmp.len()
-					{
-						let (sender, receiver) = parent.bounded(1024);
-						router_sender_vec.push(sender);
-						tile_receiver_vec.push(receiver);
-					}
-					tile_dst_vec.push(no_connection);
+					// let mut router_sender_vec = vec![];
+					// let mut tile_receiver_vec = vec![];
+					// let mut tile_sender_vec = vec![];
+					// let mut tile_dst_vec = vec![];
+					// for k in 0..pcu_receiver_vec_tmp.len()
+					// {
+					// 	let (sender, receiver) = parent.bounded(1024);
+					// 	router_sender_vec.push(sender);
+					// 	tile_receiver_vec.push(receiver);
+					// }
+					// tile_dst_vec.push(no_connection);
 
-					let (sender, receiver) = parent.bounded(1024);
-					tile_sender_vec.push(sender);
+					// let (sender, receiver) = parent.bounded(1024);
+					// tile_sender_vec.push(sender);
 					
-					let con = ConsumerContext::new(receiver);
-					parent.add_child(con);
+					
 
 
-
-					if simd_or_systolic == "SIMD"
-					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+					// if simd_or_systolic == "SIMD"
+					// {					
+					// 	let (sender1, receiver1) = parent.bounded(1024);
+					// 	let (sender2, receiver2) = parent.bounded(1024);
 						
-						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
-						parent.add_child(simd_pcu_adapter_upstream);
+					// 	let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
+					// 	parent.add_child(simd_pcu_adapter_upstream);
 
-						let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
-						parent.add_child(pcu);
+					// 	let pcu = make_simd_pcu(stage_dim, receiver1, sender2);
+					// 	parent.add_child(pcu);
 
-						let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tile_sender_vec, 1, tile_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
-						parent.add_child(simd_pcu_adapter_downstream);
-					} else if simd_or_systolic == "Systolic"
-					{
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+					// 	let simd_pcu_adapter_downstream = simd_pcu_adapter_downstream::new(receiver2, tile_sender_vec, 1, tile_dst_vec, num_input as usize, M as usize, K as usize, N as usize, dummy);
+					// 	parent.add_child(simd_pcu_adapter_downstream);
+					// } else if simd_or_systolic == "Systolic"
+					// {
+					// 	let (sender1, receiver1) = parent.bounded(1024);
+					// 	let (sender2, receiver2) = parent.bounded(1024);
+					// 	let (sender3, receiver3) = parent.bounded(1024);
+					// 	let (sender4, receiver4) = parent.bounded(1024);
 
-						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
-						parent.add_child(systolic_pcu_adapter_upstream);
+					// 	let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+					// 	parent.add_child(systolic_pcu_adapter_upstream);
 
-						let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
-						parent.add_child(pcu_lane);
+					// 	let pcu_lane = make_systolic_pcu(stage_dim, receiver1, sender3);
+					// 	parent.add_child(pcu_lane);
 
-						let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
-						parent.add_child(pcu_stage);
+					// 	let pcu_stage = make_systolic_pcu(lane_dim, receiver2, sender4);
+					// 	parent.add_child(pcu_stage);
 
-						let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tile_sender_vec, 1, tile_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
-						parent.add_child(systolic_pcu_adapter_downstream);
-					} else {
-						panic!("Wrong!");
-					}
+					// 	let systolic_pcu_adapter_downstream = systolic_pcu_adapter_downstream::new(receiver3, receiver4, tile_sender_vec, 1, tile_dst_vec, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
+					// 	parent.add_child(systolic_pcu_adapter_downstream);
+					// } else {
+					// 	panic!("Wrong!");
+					// }
 
 					
 
@@ -1983,20 +2068,15 @@ fn main() {
 					router_out_len += 1;
 
 
-
-					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					// println!();
-
-
-
-
 					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
 					parent.add_child(router);
 
-					let from_router_adapter = from_router_adapter::new(receiver, router_sender_vec, pcu_receiver_vec_tmp.len(), num_input, dummy);
-					parent.add_child(from_router_adapter);
+					// let from_router_adapter = from_router_adapter::new(receiver, router_sender_vec, pcu_receiver_vec_tmp.len(), num_input, dummy);
+					// parent.add_child(from_router_adapter);
 
+
+					let con = PrinterContext::new(receiver);
+					parent.add_child(con);
 
 
 
@@ -2081,18 +2161,11 @@ fn main() {
 					let (sender1, receiver1) = parent.bounded(1);
 					let (sender2, receiver2) = parent.bounded(1);
 					router_in_stream.push(receiver1);
-					router_in_dict.insert("L_in".to_owned(), router_in_len);
+					router_in_dict.insert("L_in".to_owned(), (router_in_len, invalid));
 					router_in_len += 1;
 					router_out_stream.push(sender2);
 					router_out_dict.insert("L_out".to_owned(), router_out_len);
 					router_out_len += 1;
-
-
-
-
-					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					// println!();
 
 
 
@@ -2132,7 +2205,7 @@ fn main() {
 				
 				// router setup
 				let mut router_in_stream = vec![];
-				let mut router_in_dict: HashMap<String, usize> = HashMap::new();
+				let mut router_in_dict: HashMap<String, (usize, usize)> = HashMap::new();
 				let mut router_in_len = 0;
 				
 				let mut router_out_stream = vec![];
@@ -2141,12 +2214,20 @@ fn main() {
 
 
 
+
+
+
+
+
+
 				// global links
 				if receiver_map_noc_global.contains_key(&(x-1, y, "S".to_owned(), x, y, "N".to_owned()))
 				{
 					let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
 					router_in_stream.push(N_in);
-					router_in_dict.insert("N_in".to_owned(), router_in_len);
+					
+					let tmp = used_link_map[&(x-1, y, "S".to_owned(), x, y, "N".to_owned())];
+					router_in_dict.insert("N_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 				}
 				
@@ -2154,7 +2235,9 @@ fn main() {
 				{
 					let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
 					router_in_stream.push(S_in);
-					router_in_dict.insert("S_in".to_owned(), router_in_len);
+
+					let tmp = used_link_map[&(x+1, y, "N".to_owned(), x, y, "S".to_owned())];
+					router_in_dict.insert("S_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 				}
 				
@@ -2162,7 +2245,9 @@ fn main() {
 				{
 					let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
 					router_in_stream.push(E_in);
-					router_in_dict.insert("E_in".to_owned(), router_in_len);
+
+					let tmp = used_link_map[&(x, y+1, "W".to_owned(), x, y, "E".to_owned())];
+					router_in_dict.insert("E_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 				}
 				
@@ -2170,7 +2255,9 @@ fn main() {
 				{
 					let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
 					router_in_stream.push(W_in);
-					router_in_dict.insert("W_in".to_owned(), router_in_len);
+
+					let tmp = used_link_map[&(x, y-1, "E".to_owned(), x, y, "W".to_owned())];
+					router_in_dict.insert("W_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 				}
 				
@@ -2208,6 +2295,11 @@ fn main() {
 
 
 
+				
+
+
+
+
 
 
 
@@ -2226,7 +2318,7 @@ fn main() {
 
 
 
-				let no_connection = 999999;
+				let no_connection = invalid;
 				if pmu_receiver_vec_tmp[0] == no_connection
 				{
 					
@@ -2328,19 +2420,8 @@ fn main() {
 					parent.add_child(to_router_adapter);
 
 					router_in_stream.push(receiver);
-					router_in_dict.insert("L_in".to_owned(), router_in_len);
+					router_in_dict.insert("L_in".to_owned(), (router_in_len, invalid));
 					router_in_len += 1;
-
-
-
-
-
-
-					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					// println!();
-
-
 
 					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
 					parent.add_child(router);
@@ -2353,72 +2434,71 @@ fn main() {
 
 
 
-					let mut router_sender_vec = vec![];
-					let mut tile_receiver_vec = vec![];
-					let mut tile_sender_vec = vec![];
-					let mut tile_dst_vec = vec![];
-					for k in 0..pmu_receiver_vec_tmp.len()
-					{
-						let (sender, receiver) = parent.bounded(1024);
-						router_sender_vec.push(sender);
-						tile_receiver_vec.push(receiver);
-					}
-					tile_dst_vec.push(no_connection);
+					// let mut router_sender_vec = vec![];
+					// let mut tile_receiver_vec = vec![];
+					// let mut tile_sender_vec = vec![];
+					// let mut tile_dst_vec = vec![];
+					// for k in 0..pmu_receiver_vec_tmp.len()
+					// {
+					// 	let (sender, receiver) = parent.bounded(1024);
+					// 	router_sender_vec.push(sender);
+					// 	tile_receiver_vec.push(receiver);
+					// }
+					// tile_dst_vec.push(no_connection);
 
-					let (sender, receiver) = parent.bounded(1024);
-					tile_sender_vec.push(sender);
+					// let (sender, receiver) = parent.bounded(1024);
+					// tile_sender_vec.push(sender);
 					
-					let con = ConsumerContext::new(receiver);
-					parent.add_child(con);
+					
 
 
 
 
 
 					// PMU setup
-					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-					let (ack_sender, ack_receiver) = parent.bounded(1024);
-					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+					// let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
+					// let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
+					// let (ack_sender, ack_receiver) = parent.bounded(1024);
+					// let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
+					// let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
 
-					let pmu_adapter_upstream = pmu_adapter_upstream::new(tile_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
-					parent.add_child(pmu_adapter_upstream);
+					// let pmu_adapter_upstream = pmu_adapter_upstream::new(tile_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
+					// parent.add_child(pmu_adapter_upstream);
 
-					let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
-						num_vec_per_pmu,
-						Behavior {
-							mod_address: false,
-							use_default_value: false,
-						},
-					);
-					pmu.add_writer(PMUWriteBundle {
-						addr: wr_addr_receiver,
-						data: wr_data_receiver,
-						ack: ack_sender,
-					});
-					pmu.add_reader(PMUReadBundle {
-						addr: rd_addr_receiver,
-						resp: rd_data_sender,
-					});
-					parent.add_child(pmu);
+					// let mut pmu: PMU<usize, usize, bool> = PMU::<usize, usize, bool>::new(
+					// 	num_vec_per_pmu,
+					// 	Behavior {
+					// 		mod_address: false,
+					// 		use_default_value: false,
+					// 	},
+					// );
+					// pmu.add_writer(PMUWriteBundle {
+					// 	addr: wr_addr_receiver,
+					// 	data: wr_data_receiver,
+					// 	ack: ack_sender,
+					// });
+					// pmu.add_reader(PMUReadBundle {
+					// 	addr: rd_addr_receiver,
+					// 	resp: rd_data_sender,
+					// });
+					// parent.add_child(pmu);
 					
-					let mut rd_addr_gen = FunctionContext::new();
-					ack_receiver.attach_receiver(&rd_addr_gen);
-					rd_addr_sender.attach_sender(&rd_addr_gen);
-					let tmp = pmu_counter_tmp * num_input;
-					rd_addr_gen.set_run(move |time| {
-						for idx in 0..tmp
-						{
-							ack_receiver.dequeue(time).unwrap();
-							let curr_time = time.tick();
-							rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
-						}
-					});
-					parent.add_child(rd_addr_gen);
+					// let mut rd_addr_gen = FunctionContext::new();
+					// ack_receiver.attach_receiver(&rd_addr_gen);
+					// rd_addr_sender.attach_sender(&rd_addr_gen);
+					// let tmp = pmu_counter_tmp * num_input;
+					// rd_addr_gen.set_run(move |time| {
+					// 	for idx in 0..tmp
+					// 	{
+					// 		ack_receiver.dequeue(time).unwrap();
+					// 		let curr_time = time.tick();
+					// 		rd_addr_sender.enqueue(time, ChannelElement{time: curr_time, data: usize::try_from(0).unwrap(),},).unwrap();
+					// 	}
+					// });
+					// parent.add_child(rd_addr_gen);
 					
-					let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tile_sender_vec, 1, tile_dst_vec, num_input as usize, pmu_counter_tmp, dummy);
-					parent.add_child(pmu_adapter_downstream);
+					// let pmu_adapter_downstream = pmu_adapter_downstream::new(rd_data_receiver, tile_sender_vec, 1, tile_dst_vec, num_input as usize, pmu_counter_tmp, dummy);
+					// parent.add_child(pmu_adapter_downstream);
 
 
 
@@ -2433,22 +2513,15 @@ fn main() {
 					router_out_dict.insert("L_out".to_owned(), router_out_len);
 					router_out_len += 1;
 
-
-
-
-
-					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					// println!();
-
-
-
-
 					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
 					parent.add_child(router);
 
-					let from_router_adapter = from_router_adapter::new(receiver, router_sender_vec, pmu_receiver_vec_tmp.len(), num_input, dummy);
-					parent.add_child(from_router_adapter);
+					// let from_router_adapter = from_router_adapter::new(receiver, router_sender_vec, pmu_receiver_vec_tmp.len(), num_input, dummy);
+					// parent.add_child(from_router_adapter);
+
+
+					let con = PrinterContext::new(receiver);
+					parent.add_child(con);
 
 
 
@@ -2549,7 +2622,7 @@ fn main() {
 					let (sender1, receiver1) = parent.bounded(1);
 					let (sender2, receiver2) = parent.bounded(1);
 					router_in_stream.push(receiver1);
-					router_in_dict.insert("L_in".to_owned(), router_in_len);
+					router_in_dict.insert("L_in".to_owned(), (router_in_len, invalid));
 					router_in_len += 1;
 					router_out_stream.push(sender2);
 					router_out_dict.insert("L_out".to_owned(), router_out_len);
@@ -2558,17 +2631,11 @@ fn main() {
 
 
 
-					// println!("x:{}, y:{}, router_in_dict:{:?}, router_in_len:{}", x, y, router_in_dict, router_in_len);
-					// println!("x:{}, y:{}, router_out_dict:{:?}, router_out_len:{}", x, y, router_out_dict, router_out_len);
-					// println!();
-
-
-
-
 
 
 					let to_router_adapter = to_router_adapter::new(router_receiver_vec, pmu_sender_vec_tmp.len(), sender1, num_input, dummy);
 					parent.add_child(to_router_adapter);
+
 
 					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
 					parent.add_child(router);
