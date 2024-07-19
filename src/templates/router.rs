@@ -183,6 +183,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             {
                                 // drop the receiver
                                 self.in_stream[in_idx_vec[i]].drop();
+                                // drop(self.in_stream[in_idx_vec[i]].clone());
                             }
                         },
                         PeekResult::Nothing(_) => 
