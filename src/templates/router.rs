@@ -405,6 +405,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
 
             if cnt1 == 5 && cnt2 == 5
             {
+                println!("finished!!!!!!!!!!!!!!!!!!!!!!! {}, {}", self.x, self.y);
                 return;
             }
 
