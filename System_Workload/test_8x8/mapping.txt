@@ -120,7 +120,7 @@ H    0     0                    3495253.3333 423254.527  87.9%     -    0s
 Cutting planes:
   MIR: 3
 
-Explored 15 nodes (76 simplex iterations) in 0.10 seconds (0.00 work units)
+Explored 15 nodes (76 simplex iterations) in 0.21 seconds (0.00 work units)
 Thread count was 144 (of 144 available processors)
 
 Solution count 2: 3.49525e+06 3.71371e+06 
@@ -315,7 +315,7 @@ System Cost 149378.0
 System Power 3825.425655722618
 Workload FLOP 4294967296.0
 System FLOPS Utilization 0.010000000000000012
-Optimizer Runtime (s) 0.3512258529663086
+Optimizer Runtime (s) 0.4344043731689453
 
 
 

@@ -1,0 +1,17 @@
+num_chip: 1
+accelerator {
+	x_dim: 4
+	y_dim: 8
+	num_compute_tile: 16
+	num_memory_tile: 16
+	lane_dim: 32
+	stage_dim: 6
+	freq: 1.25
+	word: 2
+	sram_cap: 524288
+	num_switch: 32
+	num_vc: 3
+	buffer_depth: 32
+	dram_bw: 150
+	net_bw: 50
+}

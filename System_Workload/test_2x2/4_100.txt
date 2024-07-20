@@ -26,8 +26,494 @@ num_of_connections 4
 
 
 experiment 4 ***************************************************************************************
-used_link_map {(0, 1, "S", 1, 1, "N"): 1, (1, 1, "W", 1, 0, "E"): 1, (0, 0, "S", 1, 0, "N"): 1, (0, 1, "W", 0, 0, "E"): 1}
+used_link_map {(1, 0, "to_L", 1, 0, "to_L"): 2, (0, 0, "to_L", 0, 0, "to_L"): 1, (0, 1, "from_L", 0, 1, "from_L"): 2, (1, 1, "W", 1, 0, "E"): 1, (0, 0, "from_L", 0, 0, "from_L"): 1, (0, 0, "S", 1, 0, "N"): 1, (0, 1, "S", 1, 1, "N"): 1, (1, 1, "to_L", 1, 1, "to_L"): 1, (0, 1, "W", 0, 0, "E"): 1, (1, 1, "from_L", 1, 1, "from_L"): 1}
 
 
 
 
+digraph ProgramGraph {
+    Node_0[shape="rectangle",label="GeneratorContext(ID_0)"]
+    Node_1[shape="rectangle",label="kernel(ID_1)"]
+    Node_2[shape="rectangle",label="PrinterContext(ID_2)"]
+    Node_3[shape="rectangle",label="GeneratorContext(ID_3)"]
+    Node_4[shape="rectangle",label="kernel(ID_4)"]
+    Node_5[shape="rectangle",label="PrinterContext(ID_5)"]
+    Node_6[shape="rectangle",label="GeneratorContext(ID_6)"]
+    Node_7[shape="rectangle",label="simd_pcu_adapter_upstream(ID_7)"]
+    Node_8[shape="rectangle",label="PCU(ID_8)"]
+    Node_9[shape="rectangle",label="simd_pcu_adapter_downstream(ID_9)"]
+    Node_10[shape="rectangle",label="to_router_adapter(ID_10)"]
+    Node_11[shape="rectangle",label="router(ID_11)"]
+    Node_12[shape="rectangle",label="router(ID_12)"]
+    Node_13[shape="rectangle",label="PrinterContext(ID_13)"]
+    Node_14[shape="rectangle",label="pmu_adapter_upstream(ID_14)"]
+    subgraph cluster_Node_17 {
+        label="PMU(ID_17)"
+        Node_15[shape="rectangle",label="ReadPipeline(ID_15)"]
+        Node_16[shape="rectangle",label="WritePipeline(ID_16)"]
+    }
+    Node_18[shape="rectangle",label="FunctionContext(ID_18)"]
+    Node_19[shape="rectangle",label="pmu_adapter_downstream(ID_19)"]
+    Node_20[shape="rectangle",label="to_router_adapter(ID_20)"]
+    Node_21[shape="rectangle",label="router(ID_21)"]
+    Node_22[shape="rectangle",label="from_router_adapter(ID_22)"]
+    Node_23[shape="rectangle",label="pmu_adapter_upstream(ID_23)"]
+    subgraph cluster_Node_26 {
+        label="PMU(ID_26)"
+        Node_25[shape="rectangle",label="WritePipeline(ID_25)"]
+        Node_24[shape="rectangle",label="ReadPipeline(ID_24)"]
+    }
+    Node_27[shape="rectangle",label="FunctionContext(ID_27)"]
+    Node_28[shape="rectangle",label="pmu_adapter_downstream(ID_28)"]
+    Node_29[shape="rectangle",label="to_router_adapter(ID_29)"]
+    Node_30[shape="rectangle",label="router(ID_30)"]
+    Node_31[shape="rectangle",label="from_router_adapter(ID_31)"]
+    Node_0 -> Node_1 [label="Channel(0)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_1 -> Node_2 [label="Channel(1)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_3 -> Node_4 [label="Channel(2)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_4 -> Node_5 [label="Channel(3)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_30 -> Node_12 [label="Channel(4)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_21 -> Node_12 [label="Channel(5)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_11 -> Node_30 [label="Channel(6)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_11 -> Node_21 [label="Channel(7)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_9 -> Node_10 [label="Channel(8)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_9 -> Node_10 [label="Channel(9)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_6 -> Node_7 [label="Channel(10)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_7 -> Node_8 [label="Channel(11)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_8 -> Node_9 [label="Channel(12)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_10 -> Node_11 [label="Channel(13)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_12 -> Node_13 [label="Channel(14)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_22 -> Node_14 [label="Channel(15)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_19 -> Node_20 [label="Channel(16)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_14 -> Node_16 [label="Channel(17)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_14 -> Node_16 [label="Channel(18)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_16 -> Node_18 [label="Channel(19)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_18 -> Node_15 [label="Channel(20)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_15 -> Node_19 [label="Channel(21)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_20 -> Node_21 [label="Channel(22)",tooltip="Capacity: Some(1)\nLatency: 1\nRespLatency: 1"]
+    Node_21 -> Node_22 [label="Channel(23)",tooltip="Capacity: Some(1)\nLatency: 1\nRespLatency: 1"]
+    Node_31 -> Node_23 [label="Channel(24)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_28 -> Node_29 [label="Channel(25)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_23 -> Node_25 [label="Channel(26)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_23 -> Node_25 [label="Channel(27)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_25 -> Node_27 [label="Channel(28)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_27 -> Node_24 [label="Channel(29)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_24 -> Node_28 [label="Channel(30)",tooltip="Capacity: Some(1024)\nLatency: 1\nRespLatency: 1"]
+    Node_29 -> Node_30 [label="Channel(31)",tooltip="Capacity: Some(1)\nLatency: 1\nRespLatency: 1"]
+    Node_30 -> Node_31 [label="Channel(32)",tooltip="Capacity: Some(1)\nLatency: 1\nRespLatency: 1"]
+}
+x:0, y:0, in_idx_vec[999999, 999999, 0, 999999, 1], in_num_received_limit[999999, 999999, 1, 999999, 1], out_idx_vec[999999, 0, 999999, 999999, 1], out_num_sent_limit[999999, 1, 999999, 999999, 1]   
+x:1, y:1, in_idx_vec[0, 999999, 999999, 999999, 1], in_num_received_limit[1, 999999, 999999, 999999, 1], out_idx_vec[999999, 999999, 999999, 0, 1], out_num_sent_limit[999999, 999999, 999999, 1, 1]   
+x:1, y:0, in_idx_vec[0, 999999, 1, 999999, 999999], in_num_received_limit[1, 999999, 1, 999999, 999999], out_idx_vec[999999, 999999, 999999, 999999, 0], out_num_sent_limit[999999, 999999, 999999, 999999, 2]   
+x:0, y:1, in_idx_vec[999999, 999999, 999999, 999999, 0], in_num_received_limit[999999, 999999, 999999, 999999, 2], out_idx_vec[999999, 0, 999999, 1, 999999], out_num_sent_limit[999999, 1, 999999, 1, 999999]   
+ChannelElement { time: Time { time: 2, done: false }, data: 0 }
+ChannelElement { time: Time { time: 3, done: false }, data: 1 }
+ChannelElement { time: Time { time: 4, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5, done: false }, data: 3 }
+ChannelElement { time: Time { time: 6, done: false }, data: 4 }
+ChannelElement { time: Time { time: 7, done: false }, data: 5 }
+ChannelElement { time: Time { time: 8, done: false }, data: 6 }
+ChannelElement { time: Time { time: 9, done: false }, data: 7 }
+ChannelElement { time: Time { time: 10, done: false }, data: 8 }
+ChannelElement { time: Time { time: 11, done: false }, data: 9 }
+ChannelElement { time: Time { time: 12, done: false }, data: 10 }
+ChannelElement { time: Time { time: 13, done: false }, data: 11 }
+ChannelElement { time: Time { time: 14, done: false }, data: 12 }
+ChannelElement { time: Time { time: 15, done: false }, data: 13 }
+ChannelElement { time: Time { time: 16, done: false }, data: 14 }
+ChannelElement { time: Time { time: 17, done: false }, data: 15 }
+ChannelElement { time: Time { time: 18, done: false }, data: 16 }
+ChannelElement { time: Time { time: 19, done: false }, data: 17 }
+ChannelElement { time: Time { time: 2, done: false }, data: 0 }
+ChannelElement { time: Time { time: 3, done: false }, data: 1 }
+ChannelElement { time: Time { time: 4, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5, done: false }, data: 3 }
+ChannelElement { time: Time { time: 6, done: false }, data: 4 }
+ChannelElement { time: Time { time: 7, done: false }, data: 5 }
+ChannelElement { time: Time { time: 8, done: false }, data: 6 }
+ChannelElement { time: Time { time: 20, done: false }, data: 18 }
+ChannelElement { time: Time { time: 21, done: false }, data: 19 }
+ChannelElement { time: Time { time: 22, done: false }, data: 20 }
+ChannelElement { time: Time { time: 23, done: false }, data: 21 }
+ChannelElement { time: Time { time: 24, done: false }, data: 22 }
+ChannelElement { time: Time { time: 25, done: false }, data: 23 }
+ChannelElement { time: Time { time: 9, done: false }, data: 7 }
+ChannelElement { time: Time { time: 10, done: false }, data: 8 }
+ChannelElement { time: Time { time: 11, done: false }, data: 9 }
+ChannelElement { time: Time { time: 12, done: false }, data: 10 }
+ChannelElement { time: Time { time: 26, done: false }, data: 24 }
+ChannelElement { time: Time { time: 27, done: false }, data: 25 }
+ChannelElement { time: Time { time: 28, done: false }, data: 26 }
+ChannelElement { time: Time { time: 13, done: false }, data: 11 }
+ChannelElement { time: Time { time: 14, done: false }, data: 12 }
+ChannelElement { time: Time { time: 15, done: false }, data: 13 }
+ChannelElement { time: Time { time: 16, done: false }, data: 14 }
+ChannelElement { time: Time { time: 17, done: false }, data: 15 }
+ChannelElement { time: Time { time: 18, done: false }, data: 16 }
+ChannelElement { time: Time { time: 19, done: false }, data: 17 }
+ChannelElement { time: Time { time: 20, done: false }, data: 18 }
+ChannelElement { time: Time { time: 21, done: false }, data: 19 }
+ChannelElement { time: Time { time: 22, done: false }, data: 20 }
+ChannelElement { time: Time { time: 23, done: false }, data: 21 }
+ChannelElement { time: Time { time: 29, done: false }, data: 27 }
+ChannelElement { time: Time { time: 30, done: false }, data: 28 }
+ChannelElement { time: Time { time: 31, done: false }, data: 29 }
+ChannelElement { time: Time { time: 24, done: false }, data: 22 }
+ChannelElement { time: Time { time: 25, done: false }, data: 23 }
+ChannelElement { time: Time { time: 26, done: false }, data: 24 }
+ChannelElement { time: Time { time: 27, done: false }, data: 25 }
+ChannelElement { time: Time { time: 28, done: false }, data: 26 }
+ChannelElement { time: Time { time: 29, done: false }, data: 27 }
+ChannelElement { time: Time { time: 30, done: false }, data: 28 }
+ChannelElement { time: Time { time: 31, done: false }, data: 29 }
+ChannelElement { time: Time { time: 32, done: false }, data: 30 }
+ChannelElement { time: Time { time: 32, done: false }, data: 30 }
+ChannelElement { time: Time { time: 33, done: false }, data: 31 }
+ChannelElement { time: Time { time: 34, done: false }, data: 32 }
+ChannelElement { time: Time { time: 35, done: false }, data: 33 }
+ChannelElement { time: Time { time: 33, done: false }, data: 31 }
+ChannelElement { time: Time { time: 34, done: false }, data: 32 }
+ChannelElement { time: Time { time: 35, done: false }, data: 33 }
+ChannelElement { time: Time { time: 36, done: false }, data: 34 }
+ChannelElement { time: Time { time: 37, done: false }, data: 35 }
+ChannelElement { time: Time { time: 38, done: false }, data: 36 }
+ChannelElement { time: Time { time: 39, done: false }, data: 37 }
+ChannelElement { time: Time { time: 36, done: false }, data: 34 }
+ChannelElement { time: Time { time: 37, done: false }, data: 35 }
+ChannelElement { time: Time { time: 38, done: false }, data: 36 }
+ChannelElement { time: Time { time: 39, done: false }, data: 37 }
+ChannelElement { time: Time { time: 40, done: false }, data: 38 }
+ChannelElement { time: Time { time: 41, done: false }, data: 39 }
+ChannelElement { time: Time { time: 42, done: false }, data: 40 }
+ChannelElement { time: Time { time: 43, done: false }, data: 41 }
+ChannelElement { time: Time { time: 44, done: false }, data: 42 }
+ChannelElement { time: Time { time: 45, done: false }, data: 43 }
+ChannelElement { time: Time { time: 46, done: false }, data: 44 }
+ChannelElement { time: Time { time: 47, done: false }, data: 45 }
+ChannelElement { time: Time { time: 48, done: false }, data: 46 }
+ChannelElement { time: Time { time: 49, done: false }, data: 47 }
+ChannelElement { time: Time { time: 50, done: false }, data: 48 }
+ChannelElement { time: Time { time: 51, done: false }, data: 49 }
+ChannelElement { time: Time { time: 40, done: false }, data: 38 }
+ChannelElement { time: Time { time: 41, done: false }, data: 39 }
+ChannelElement { time: Time { time: 42, done: false }, data: 40 }
+ChannelElement { time: Time { time: 52, done: false }, data: 50 }
+ChannelElement { time: Time { time: 53, done: false }, data: 51 }
+ChannelElement { time: Time { time: 54, done: false }, data: 52 }
+ChannelElement { time: Time { time: 55, done: false }, data: 53 }
+ChannelElement { time: Time { time: 43, done: false }, data: 41 }
+ChannelElement { time: Time { time: 44, done: false }, data: 42 }
+ChannelElement { time: Time { time: 56, done: false }, data: 54 }
+ChannelElement { time: Time { time: 57, done: false }, data: 55 }
+ChannelElement { time: Time { time: 58, done: false }, data: 56 }
+ChannelElement { time: Time { time: 59, done: false }, data: 57 }
+ChannelElement { time: Time { time: 45, done: false }, data: 43 }
+ChannelElement { time: Time { time: 46, done: false }, data: 44 }
+ChannelElement { time: Time { time: 60, done: false }, data: 58 }
+ChannelElement { time: Time { time: 61, done: false }, data: 59 }
+ChannelElement { time: Time { time: 62, done: false }, data: 60 }
+ChannelElement { time: Time { time: 63, done: false }, data: 61 }
+ChannelElement { time: Time { time: 47, done: false }, data: 45 }
+ChannelElement { time: Time { time: 48, done: false }, data: 46 }
+ChannelElement { time: Time { time: 49, done: false }, data: 47 }
+ChannelElement { time: Time { time: 50, done: false }, data: 48 }
+ChannelElement { time: Time { time: 51, done: false }, data: 49 }
+ChannelElement { time: Time { time: 52, done: false }, data: 50 }
+ChannelElement { time: Time { time: 64, done: false }, data: 62 }
+ChannelElement { time: Time { time: 65, done: false }, data: 63 }
+ChannelElement { time: Time { time: 66, done: false }, data: 64 }
+ChannelElement { time: Time { time: 67, done: false }, data: 65 }
+ChannelElement { time: Time { time: 68, done: false }, data: 66 }
+ChannelElement { time: Time { time: 69, done: false }, data: 67 }
+ChannelElement { time: Time { time: 70, done: false }, data: 68 }
+ChannelElement { time: Time { time: 71, done: false }, data: 69 }
+ChannelElement { time: Time { time: 72, done: false }, data: 70 }
+ChannelElement { time: Time { time: 53, done: false }, data: 51 }
+ChannelElement { time: Time { time: 54, done: false }, data: 52 }
+ChannelElement { time: Time { time: 55, done: false }, data: 53 }
+ChannelElement { time: Time { time: 56, done: false }, data: 54 }
+ChannelElement { time: Time { time: 57, done: false }, data: 55 }
+ChannelElement { time: Time { time: 58, done: false }, data: 56 }
+ChannelElement { time: Time { time: 59, done: false }, data: 57 }
+ChannelElement { time: Time { time: 60, done: false }, data: 58 }
+ChannelElement { time: Time { time: 61, done: false }, data: 59 }
+ChannelElement { time: Time { time: 62, done: false }, data: 60 }
+ChannelElement { time: Time { time: 63, done: false }, data: 61 }
+ChannelElement { time: Time { time: 64, done: false }, data: 62 }
+ChannelElement { time: Time { time: 65, done: false }, data: 63 }
+ChannelElement { time: Time { time: 66, done: false }, data: 64 }
+ChannelElement { time: Time { time: 67, done: false }, data: 65 }
+ChannelElement { time: Time { time: 68, done: false }, data: 66 }
+ChannelElement { time: Time { time: 69, done: false }, data: 67 }
+ChannelElement { time: Time { time: 70, done: false }, data: 68 }
+ChannelElement { time: Time { time: 71, done: false }, data: 69 }
+ChannelElement { time: Time { time: 72, done: false }, data: 70 }
+ChannelElement { time: Time { time: 73, done: false }, data: 71 }
+ChannelElement { time: Time { time: 74, done: false }, data: 72 }
+ChannelElement { time: Time { time: 75, done: false }, data: 73 }
+ChannelElement { time: Time { time: 76, done: false }, data: 74 }
+ChannelElement { time: Time { time: 77, done: false }, data: 75 }
+ChannelElement { time: Time { time: 78, done: false }, data: 76 }
+ChannelElement { time: Time { time: 79, done: false }, data: 77 }
+ChannelElement { time: Time { time: 73, done: false }, data: 71 }
+ChannelElement { time: Time { time: 74, done: false }, data: 72 }
+ChannelElement { time: Time { time: 75, done: false }, data: 73 }
+ChannelElement { time: Time { time: 76, done: false }, data: 74 }
+ChannelElement { time: Time { time: 80, done: false }, data: 78 }
+ChannelElement { time: Time { time: 81, done: false }, data: 79 }
+ChannelElement { time: Time { time: 82, done: false }, data: 80 }
+ChannelElement { time: Time { time: 83, done: false }, data: 81 }
+ChannelElement { time: Time { time: 84, done: false }, data: 82 }
+ChannelElement { time: Time { time: 85, done: false }, data: 83 }
+ChannelElement { time: Time { time: 77, done: false }, data: 75 }
+ChannelElement { time: Time { time: 78, done: false }, data: 76 }
+ChannelElement { time: Time { time: 79, done: false }, data: 77 }
+ChannelElement { time: Time { time: 80, done: false }, data: 78 }
+ChannelElement { time: Time { time: 86, done: false }, data: 84 }
+ChannelElement { time: Time { time: 87, done: false }, data: 85 }
+ChannelElement { time: Time { time: 88, done: false }, data: 86 }
+ChannelElement { time: Time { time: 89, done: false }, data: 87 }
+ChannelElement { time: Time { time: 81, done: false }, data: 79 }
+ChannelElement { time: Time { time: 82, done: false }, data: 80 }
+ChannelElement { time: Time { time: 90, done: false }, data: 88 }
+ChannelElement { time: Time { time: 91, done: false }, data: 89 }
+ChannelElement { time: Time { time: 92, done: false }, data: 90 }
+ChannelElement { time: Time { time: 93, done: false }, data: 91 }
+ChannelElement { time: Time { time: 83, done: false }, data: 81 }
+ChannelElement { time: Time { time: 84, done: false }, data: 82 }
+ChannelElement { time: Time { time: 94, done: false }, data: 92 }
+ChannelElement { time: Time { time: 95, done: false }, data: 93 }
+ChannelElement { time: Time { time: 96, done: false }, data: 94 }
+ChannelElement { time: Time { time: 97, done: false }, data: 95 }
+ChannelElement { time: Time { time: 85, done: false }, data: 83 }
+ChannelElement { time: Time { time: 86, done: false }, data: 84 }
+ChannelElement { time: Time { time: 87, done: false }, data: 85 }
+ChannelElement { time: Time { time: 88, done: false }, data: 86 }
+ChannelElement { time: Time { time: 98, done: false }, data: 96 }
+ChannelElement { time: Time { time: 99, done: false }, data: 97 }
+ChannelElement { time: Time { time: 100, done: false }, data: 98 }
+ChannelElement { time: Time { time: 101, done: false }, data: 99 }
+ChannelElement { time: Time { time: 89, done: false }, data: 87 }
+ChannelElement { time: Time { time: 90, done: false }, data: 88 }
+ChannelElement { time: Time { time: 91, done: false }, data: 89 }
+ChannelElement { time: Time { time: 92, done: false }, data: 90 }
+ChannelElement { time: Time { time: 93, done: false }, data: 91 }
+ChannelElement { time: Time { time: 94, done: false }, data: 92 }
+ChannelElement { time: Time { time: 95, done: false }, data: 93 }
+ChannelElement { time: Time { time: 96, done: false }, data: 94 }
+ChannelElement { time: Time { time: 97, done: false }, data: 95 }
+ChannelElement { time: Time { time: 98, done: false }, data: 96 }
+ChannelElement { time: Time { time: 99, done: false }, data: 97 }
+ChannelElement { time: Time { time: 100, done: false }, data: 98 }
+ChannelElement { time: Time { time: 101, done: false }, data: 99 }
+ChannelElement { time: Time { time: 77, done: false }, data: 2 }
+ChannelElement { time: Time { time: 78, done: false }, data: 2 }
+ChannelElement { time: Time { time: 141, done: false }, data: 2 }
+ChannelElement { time: Time { time: 142, done: false }, data: 2 }
+ChannelElement { time: Time { time: 205, done: false }, data: 2 }
+ChannelElement { time: Time { time: 206, done: false }, data: 2 }
+ChannelElement { time: Time { time: 269, done: false }, data: 2 }
+ChannelElement { time: Time { time: 270, done: false }, data: 2 }
+ChannelElement { time: Time { time: 333, done: false }, data: 2 }
+ChannelElement { time: Time { time: 334, done: false }, data: 2 }
+ChannelElement { time: Time { time: 397, done: false }, data: 2 }
+ChannelElement { time: Time { time: 398, done: false }, data: 2 }
+ChannelElement { time: Time { time: 461, done: false }, data: 2 }
+ChannelElement { time: Time { time: 462, done: false }, data: 2 }
+ChannelElement { time: Time { time: 525, done: false }, data: 2 }
+ChannelElement { time: Time { time: 526, done: false }, data: 2 }
+ChannelElement { time: Time { time: 589, done: false }, data: 2 }
+ChannelElement { time: Time { time: 590, done: false }, data: 2 }
+ChannelElement { time: Time { time: 653, done: false }, data: 2 }
+ChannelElement { time: Time { time: 654, done: false }, data: 2 }
+ChannelElement { time: Time { time: 717, done: false }, data: 2 }
+ChannelElement { time: Time { time: 718, done: false }, data: 2 }
+ChannelElement { time: Time { time: 781, done: false }, data: 2 }
+ChannelElement { time: Time { time: 782, done: false }, data: 2 }
+ChannelElement { time: Time { time: 845, done: false }, data: 2 }
+ChannelElement { time: Time { time: 846, done: false }, data: 2 }
+ChannelElement { time: Time { time: 909, done: false }, data: 2 }
+ChannelElement { time: Time { time: 910, done: false }, data: 2 }
+ChannelElement { time: Time { time: 973, done: false }, data: 2 }
+ChannelElement { time: Time { time: 974, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1037, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1038, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1101, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1102, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1165, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1166, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1229, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1230, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1293, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1294, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1357, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1358, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1421, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1422, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1485, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1486, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1549, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1550, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1613, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1614, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1677, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1678, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1741, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1742, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1805, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1806, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1869, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1870, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1933, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1934, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1997, done: false }, data: 2 }
+ChannelElement { time: Time { time: 1998, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2061, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2062, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2125, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2126, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2189, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2190, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2253, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2254, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2261, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2318, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2381, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2382, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2445, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2446, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2509, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2510, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2573, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2574, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2637, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2638, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2701, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2702, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2765, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2766, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2829, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2830, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2893, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2894, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2957, done: false }, data: 2 }
+ChannelElement { time: Time { time: 2958, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3021, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3022, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3085, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3086, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3149, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3150, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3213, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3214, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3277, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3278, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3341, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3342, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3405, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3406, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3469, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3470, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3533, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3534, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3597, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3598, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3661, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3662, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3725, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3726, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3789, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3790, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3853, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3854, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3917, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3918, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3981, done: false }, data: 2 }
+ChannelElement { time: Time { time: 3982, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4045, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4046, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4109, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4110, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4173, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4174, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4237, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4238, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4301, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4302, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4310, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4365, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4429, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4430, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4493, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4494, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4557, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4558, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4621, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4622, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4685, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4686, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4749, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4750, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4813, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4814, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4877, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4878, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4941, done: false }, data: 2 }
+ChannelElement { time: Time { time: 4942, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5005, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5006, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5069, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5070, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5133, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5134, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5197, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5198, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5261, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5262, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5325, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5326, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5389, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5390, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5453, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5454, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5517, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5518, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5581, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5582, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5645, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5646, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5709, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5710, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5773, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5774, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5837, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5838, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5901, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5902, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5965, done: false }, data: 2 }
+ChannelElement { time: Time { time: 5966, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6029, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6030, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6093, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6094, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6157, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6158, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6221, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6222, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6285, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6286, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6349, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6350, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6358, done: false }, data: 2 }
+ChannelElement { time: Time { time: 6359, done: false }, data: 2 }
+Elapsed cycles: Some(6416)
+
+
+
+
+
+
+
+
+dfmodel_time [51]
+experiment_time [64]

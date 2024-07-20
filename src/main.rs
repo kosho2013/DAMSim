@@ -190,6 +190,28 @@ fn main() {
 			let mut dst_x = connection_second_x[j];
 			let mut dst_y = connection_second_y[j];
 
+			let link = (curr_x, curr_y, "from_L".to_owned(), curr_x, curr_y, "from_L".to_owned());
+			if used_link_map.contains_key(&link)
+			{	
+				let tmp = used_link_map[&link] + 1;
+				used_link_map.insert(link, tmp);
+			} else
+			{ 
+				used_link_map.insert(link, 1);
+			}
+
+
+			let link = (dst_x, dst_y, "to_L".to_owned(), dst_x, dst_y, "to_L".to_owned());
+			if used_link_map.contains_key(&link)
+			{	
+				let tmp = used_link_map[&link] + 1;
+				used_link_map.insert(link, tmp);
+			} else
+			{ 
+				used_link_map.insert(link, 1);
+			}
+
+
 			while true
 			{
 				if dst_x == curr_x && dst_y == curr_y // exit local port
@@ -1728,59 +1750,19 @@ fn main() {
 
 			for ele in used_link_map.keys()
 			{
-				let (sender, receiver) = parent.bounded(buffer_depth);
-				sender_map_noc_global.insert(ele.clone(), sender);
-				receiver_map_noc_global.insert(ele.clone(), receiver);
+				if ele.2 == "to_L".to_owned() || ele.2 == "from_L".to_owned()
+				{
+
+				} else
+				{
+					let (sender, receiver) = parent.bounded(buffer_depth);
+					sender_map_noc_global.insert(ele.clone(), sender);
+					receiver_map_noc_global.insert(ele.clone(), receiver);
+				}
 			}
 
 			println!("used_link_map {:?}", used_link_map);
 			println!("\n\n\n");
-
-
-
-
-			// check critical input ports
-			// NSEWL
-			// let mut critical_input_ports_map = HashMap::new();
-
-			// for x in 0..x_dim
-			// {
-			// 	for y in 0..y_dim
-			// 	{
-			// 		let mut tmp1 = vec![];
-			// 		let mut tmp2 = vec![];
-
-			// 		if receiver_map_noc_global.contains_key(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())) && receiver_map_noc_global.contains_key(&(x, y, "N".to_owned(), x-1, y, "S".to_owned()))
-			// 		{
-			// 			tmp1.push("N_in".to_owned());
-			// 			tmp2.push(used_link_map[&(x-1, y, "S".to_owned(), x, y, "N".to_owned())]);
-			// 		}
-					
-			// 		if receiver_map_noc_global.contains_key(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())) && receiver_map_noc_global.contains_key(&(x, y, "S".to_owned(), x+1, y, "N".to_owned()))
-			// 		{
-			// 			tmp1.push("S_in".to_owned());
-			// 			tmp2.push(used_link_map[&(x+1, y, "N".to_owned(), x, y, "S".to_owned())]);
-			// 		}
-
-			// 		if receiver_map_noc_global.contains_key(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())) && receiver_map_noc_global.contains_key(&(x, y, "W".to_owned(), x, y-1, "E".to_owned()))
-			// 		{
-			// 			tmp1.push("W_in".to_owned());
-			// 			tmp2.push(used_link_map[&(x, y-1, "E".to_owned(), x, y, "W".to_owned())]);
-			// 		}
-
-			// 		if receiver_map_noc_global.contains_key(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())) && receiver_map_noc_global.contains_key(&(x, y, "E".to_owned(), x, y+1, "W".to_owned()))
-			// 		{
-			// 			tmp1.push("E_in".to_owned());
-			// 			tmp2.push(used_link_map[&(x, y+1, "W".to_owned(), x, y, "E".to_owned())]);
-			// 		}
-
-			// 		critical_input_ports_map.insert((x, y), (tmp1, tmp2));
-			// 	}
-			// }
-				
-			// println!("critical_input_ports_map{:?}", critical_input_ports_map);
-			// println!("\n\n\n");
-
 
 
 
@@ -1798,7 +1780,7 @@ fn main() {
 				let mut router_in_len = 0;
 				
 				let mut router_out_stream = vec![];
-				let mut router_out_dict: HashMap<String, usize> = HashMap::new();
+				let mut router_out_dict: HashMap<String, (usize, usize)> = HashMap::new();
 				let mut router_out_len = 0;
 
 
@@ -1854,7 +1836,8 @@ fn main() {
 					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
 					router_out_stream.push(N_out);
 
-					router_out_dict.insert("N_out".to_owned(), router_out_len);
+					let tmp = used_link_map[&(x, y, "N".to_owned(), x-1, y, "S".to_owned())];
+					router_out_dict.insert("N_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 				}
 				
@@ -1862,7 +1845,9 @@ fn main() {
 				{
 					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
 					router_out_stream.push(S_out);
-					router_out_dict.insert("S_out".to_owned(), router_out_len);
+
+					let tmp = used_link_map[&(x, y, "S".to_owned(), x+1, y, "N".to_owned())];
+					router_out_dict.insert("S_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 				}
 				
@@ -1871,7 +1856,8 @@ fn main() {
 					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 					router_out_stream.push(E_out);
 
-					router_out_dict.insert("E_out".to_owned(), router_out_len);
+					let tmp = used_link_map[&(x, y, "E".to_owned(), x, y+1, "W".to_owned())];
+					router_out_dict.insert("E_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 				}
 				
@@ -1880,7 +1866,8 @@ fn main() {
 					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();	
 					router_out_stream.push(W_out);
 
-					router_out_dict.insert("W_out".to_owned(), router_out_len);
+					let tmp = used_link_map[&(x, y, "W".to_owned(), x, y-1, "E".to_owned())];
+					router_out_dict.insert("W_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 				}
 
@@ -1993,11 +1980,14 @@ fn main() {
 					parent.add_child(to_router_adapter);
 
 					router_in_stream.push(receiver);
-					router_in_dict.insert("L_in".to_owned(), (router_in_len, invalid));
+
+
+					let tmp = used_link_map[&(x, y, "from_L".to_owned(), x, y, "from_L".to_owned())];
+					router_in_dict.insert("L_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 
 
-					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, dummy);
 					parent.add_child(router);
 
 
@@ -2064,11 +2054,13 @@ fn main() {
 
 					let (sender, receiver) = parent.bounded(buffer_depth);
 					router_out_stream.push(sender);
-					router_out_dict.insert("L_out".to_owned(), router_out_len);
+
+					let tmp = used_link_map[&(x, y, "to_L".to_owned(), x, y, "to_L".to_owned())];
+					router_out_dict.insert("L_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 
 
-					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, dummy);
 					parent.add_child(router);
 
 					// let from_router_adapter = from_router_adapter::new(receiver, router_sender_vec, pcu_receiver_vec_tmp.len(), num_input, dummy);
@@ -2160,11 +2152,18 @@ fn main() {
 
 					let (sender1, receiver1) = parent.bounded(1);
 					let (sender2, receiver2) = parent.bounded(1);
+
 					router_in_stream.push(receiver1);
-					router_in_dict.insert("L_in".to_owned(), (router_in_len, invalid));
+
+					let tmp = used_link_map[&(x, y, "from_L".to_owned(), x, y, "from_L".to_owned())];
+					router_in_dict.insert("L_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
+
+
 					router_out_stream.push(sender2);
-					router_out_dict.insert("L_out".to_owned(), router_out_len);
+
+					let tmp = used_link_map[&(x, y, "to_L".to_owned(), x, y, "to_L".to_owned())];
+					router_out_dict.insert("L_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 
 
@@ -2173,7 +2172,7 @@ fn main() {
 					let to_router_adapter = to_router_adapter::new(router_receiver_vec, pcu_sender_vec_tmp.len(), sender1, num_input, dummy);
 					parent.add_child(to_router_adapter);
 
-					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, dummy);
 					parent.add_child(router);
 
 					let from_router_adapter = from_router_adapter::new(receiver2, router_sender_vec, pcu_receiver_vec_tmp.len(), num_input, dummy);
@@ -2209,7 +2208,7 @@ fn main() {
 				let mut router_in_len = 0;
 				
 				let mut router_out_stream = vec![];
-				let mut router_out_dict: HashMap<String, usize> = HashMap::new();
+				let mut router_out_dict: HashMap<String, (usize, usize)> = HashMap::new();
 				let mut router_out_len = 0;
 
 
@@ -2265,7 +2264,9 @@ fn main() {
 				{
 					let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
 					router_out_stream.push(N_out);
-					router_out_dict.insert("N_out".to_owned(), router_out_len);
+
+					let tmp = used_link_map[&(x, y, "N".to_owned(), x-1, y, "S".to_owned())];
+					router_out_dict.insert("N_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 				}
 				
@@ -2273,7 +2274,9 @@ fn main() {
 				{
 					let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
 					router_out_stream.push(S_out);
-					router_out_dict.insert("S_out".to_owned(), router_out_len);
+
+					let tmp = used_link_map[&(x, y, "S".to_owned(), x+1, y, "N".to_owned())];
+					router_out_dict.insert("S_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 				}
 				
@@ -2281,7 +2284,9 @@ fn main() {
 				{
 					let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
 					router_out_stream.push(E_out);
-					router_out_dict.insert("E_out".to_owned(), router_out_len);
+
+					let tmp = used_link_map[&(x, y, "E".to_owned(), x, y+1, "W".to_owned())];
+					router_out_dict.insert("E_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 				}
 				
@@ -2289,13 +2294,11 @@ fn main() {
 				{
 					let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();	
 					router_out_stream.push(W_out);
-					router_out_dict.insert("W_out".to_owned(), router_out_len);
+
+					let tmp = used_link_map[&(x, y, "W".to_owned(), x, y-1, "E".to_owned())];
+					router_out_dict.insert("W_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 				}
-
-
-
-				
 
 
 
@@ -2420,10 +2423,12 @@ fn main() {
 					parent.add_child(to_router_adapter);
 
 					router_in_stream.push(receiver);
-					router_in_dict.insert("L_in".to_owned(), (router_in_len, invalid));
+
+					let tmp = used_link_map[&(x, y, "from_L".to_owned(), x, y, "from_L".to_owned())];
+					router_in_dict.insert("L_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
 
-					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, dummy);
 					parent.add_child(router);
 
 
@@ -2510,10 +2515,12 @@ fn main() {
 
 					let (sender, receiver) = parent.bounded(buffer_depth);
 					router_out_stream.push(sender);
-					router_out_dict.insert("L_out".to_owned(), router_out_len);
+
+					let tmp = used_link_map[&(x, y, "to_L".to_owned(), x, y, "to_L".to_owned())];
+					router_out_dict.insert("L_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 
-					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, dummy);
 					parent.add_child(router);
 
 					// let from_router_adapter = from_router_adapter::new(receiver, router_sender_vec, pmu_receiver_vec_tmp.len(), num_input, dummy);
@@ -2622,10 +2629,15 @@ fn main() {
 					let (sender1, receiver1) = parent.bounded(1);
 					let (sender2, receiver2) = parent.bounded(1);
 					router_in_stream.push(receiver1);
-					router_in_dict.insert("L_in".to_owned(), (router_in_len, invalid));
+
+					let tmp = used_link_map[&(x, y, "from_L".to_owned(), x, y, "from_L".to_owned())];
+					router_in_dict.insert("L_in".to_owned(), (router_in_len, tmp));
 					router_in_len += 1;
+
 					router_out_stream.push(sender2);
-					router_out_dict.insert("L_out".to_owned(), router_out_len);
+					
+					let tmp = used_link_map[&(x, y, "to_L".to_owned(), x, y, "to_L".to_owned())];
+					router_out_dict.insert("L_out".to_owned(), (router_out_len, tmp));
 					router_out_len += 1;
 
 
@@ -2637,7 +2649,7 @@ fn main() {
 					parent.add_child(to_router_adapter);
 
 
-					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, dummy);
+					let router = router::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, dummy);
 					parent.add_child(router);
 
 					let from_router_adapter = from_router_adapter::new(receiver2, router_sender_vec, pmu_receiver_vec_tmp.len(), num_input, dummy);
