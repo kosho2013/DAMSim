@@ -14,7 +14,7 @@ use dam::channel::{ChannelElement, Receiver};
 use dam::templates::datastore::Behavior;
 use dam::templates::pmu::{PMUReadBundle, PMUWriteBundle, PMU};
 use dam::types::StaticallySized;
-use dam::utility_contexts::{PrinterContext, FunctionContext, GeneratorContext};
+use dam::utility_contexts::{ConsumerContext, FunctionContext, GeneratorContext};
 use proto_driver::proto_headers::setup::System;
 use prost::Message;
 use dam::{logging::LogEvent, simulation::*};
@@ -528,7 +528,7 @@ fn main() {
 			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(memory);
 
-			let output = PrinterContext::new(receiver_map_mem.remove(&1).unwrap());
+			let output = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -541,7 +541,7 @@ fn main() {
 			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(network);
 
-			let output = PrinterContext::new(receiver_map_net.remove(&1).unwrap());
+			let output = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -556,7 +556,7 @@ fn main() {
 				parent.add_child(compute);
 			}
 
-			let output = PrinterContext::new(receiver_map_comp.remove(&num_kernel).unwrap());
+			let output = ConsumerContext::new(receiver_map_comp.remove(&num_kernel).unwrap());
 			parent.add_child(output);
 
 
@@ -630,7 +630,7 @@ fn main() {
 			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(memory);
 
-			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_mem.remove(&1).unwrap());
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -652,7 +652,7 @@ fn main() {
 			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(network);
 
-			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_net.remove(&1).unwrap());
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -828,7 +828,7 @@ fn main() {
 						panic!("Wrong!");
 					}
 
-					let con = PrinterContext::new(receiver);
+					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -971,7 +971,7 @@ fn main() {
 					let kernel: kernel_multi_in_out<usize> = kernel_multi_in_out::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, tmp_sender_vec, 1, pmu_counter_tmp as usize, pmu_counter_tmp as usize, num_input as usize, dummy);
 					parent.add_child(kernel);
 
-					let con = PrinterContext::new(receiver);
+					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -1059,7 +1059,7 @@ fn main() {
 			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(memory);
 
-			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_mem.remove(&1).unwrap());
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -1081,7 +1081,7 @@ fn main() {
 			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(network);
 
-			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_net.remove(&1).unwrap());
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -1257,7 +1257,7 @@ fn main() {
 						panic!("Wrong!");
 					}
 
-					let con = PrinterContext::new(receiver);
+					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -1534,7 +1534,7 @@ fn main() {
 
 
 
-					let con = PrinterContext::new(receiver);
+					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -1709,7 +1709,7 @@ fn main() {
 			let memory = kernel::new(receiver_map_mem.remove(&0).unwrap(), sender_map_mem.remove(&1).unwrap(), Memory_Latency[i] as usize, Memory_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(memory);
 
-			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_mem.remove(&1).unwrap());
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_mem.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -1731,7 +1731,7 @@ fn main() {
 			let network = kernel::new(receiver_map_net.remove(&0).unwrap(), sender_map_net.remove(&1).unwrap(), Network_Latency[i] as usize, Network_Latency[i] as usize, num_input as usize, dummy);
 			parent.add_child(network);
 
-			let output: PrinterContext<usize> = PrinterContext::new(receiver_map_net.remove(&1).unwrap());
+			let output: ConsumerContext<usize> = ConsumerContext::new(receiver_map_net.remove(&1).unwrap());
 			parent.add_child(output);
 
 
@@ -2067,7 +2067,7 @@ fn main() {
 					// parent.add_child(from_router_adapter);
 
 
-					let con = PrinterContext::new(receiver);
+					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
 
 
@@ -2527,7 +2527,7 @@ fn main() {
 					// parent.add_child(from_router_adapter);
 
 
-					let con = PrinterContext::new(receiver);
+					let con = ConsumerContext::new(receiver);
 					parent.add_child(con);
 
 
