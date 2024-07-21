@@ -76,8 +76,8 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_upstream<A> {
             {
                 let curr_time = self.time.tick();
                 self.out_stream.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
-                self.time.incr_cycles(1);
             }
+            self.time.incr_cycles(1);
         }
     }
 }
@@ -162,15 +162,15 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_downstream<A> {
         {
             let in_data = self.in_stream.dequeue(&self.time).unwrap().data;
 
-            if (i % tmp2 == 0)
+            if i % tmp2 == 0
             {
                 for j in 0..self.out_len
                 {
                     let curr_time = self.time.tick();
                     let idx: usize = j.try_into().unwrap();
                     self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time + 1, self.out_dst[j])).unwrap();
-                    self.time.incr_cycles(1);
-                }   
+                }
+                self.time.incr_cycles(1); 
             }
         }
     }
@@ -267,8 +267,8 @@ impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_upstream<A> {
                 let curr_time = self.time.tick();
                 self.out_stream_lane.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
                 self.out_stream_stage.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
-                self.time.incr_cycles(1);
             }
+            self.time.incr_cycles(1);
         }
     }
 }
@@ -343,8 +343,8 @@ systolic_pcu_adapter_downstream<A>: Context,
 
 impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_downstream<A> {
     fn run(&mut self) {
-        let tmp_outer = self.m * (self.k) * self.n * self.loop_bound;
-        let tmp_inner = self.m * (self.k) * self.n;
+        let tmp_outer = self.m * self.k * self.n * self.loop_bound;
+        let tmp_inner = self.m * self.k * self.n;
 
         for i in 0..tmp_outer
         {
@@ -358,8 +358,8 @@ impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_downstream<A> {
                     let curr_time = self.time.tick();
                     let idx: usize = j.try_into().unwrap();
                     self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time + 1, self.out_dst[j])).unwrap();
-                    self.time.incr_cycles(1);
-                }   
+                }
+                self.time.incr_cycles(1); 
             }
         }
 

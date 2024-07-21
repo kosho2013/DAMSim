@@ -56,8 +56,8 @@ impl<A: DAMType + num::Num> Context for to_router_adapter<A> {
 
                 let curr_time = self.time.tick();
                 self.out_stream.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
-                self.time.incr_cycles(1);
             }
+            self.time.incr_cycles(1);
         }
     }
 }
@@ -119,8 +119,8 @@ impl<A: DAMType + num::Num> Context for from_router_adapter<A> {
                 let curr_time = self.time.tick();
                 let idx: usize = j.try_into().unwrap();
                 self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
-                self.time.incr_cycles(1);
             }
+            self.time.incr_cycles(1);
         }
     }
 }

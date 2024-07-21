@@ -71,9 +71,9 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_upstream<A> {
                 let curr_time = self.time.tick();
                 self.out_stream_wr_addr.enqueue(&self.time, ChannelElement::new(curr_time + 1, 0)).unwrap();
                 self.out_stream_wr_data.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
-                self.time.incr_cycles(1);
                 cnt += 1;
             }
+            self.time.incr_cycles(1);
         }
     }
 }
@@ -137,15 +137,15 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_downstream<A> {
         {
             let in_data = self.in_stream.dequeue(&self.time).unwrap().data;
 
-            if (i % self.counter == 0)
+            if i % self.counter == 0
             {
                 for j in 0..self.out_len
                 {
                     let curr_time = self.time.tick();
                     let idx: usize = j.try_into().unwrap();
                     self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time + 1, self.out_dst[j])).unwrap();
-                    self.time.incr_cycles(1);
-                }   
+                }
+                self.time.incr_cycles(1);
             }
         }
     }
