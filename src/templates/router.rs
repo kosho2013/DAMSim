@@ -292,7 +292,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[4]*self.num_vc+vcid[4]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[4]*self.num_vc+vcid[4]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             out_num_sent[4] += 1;
 //                         }
 
@@ -303,7 +303,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[3]*self.num_vc+vcid[3]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[3]*self.num_vc+vcid[3]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             vcid[3] = (vcid[3] + 1) % self.num_vc;
 //                             out_num_sent[3] += 1;
 //                         }
@@ -315,7 +315,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[0]*self.num_vc+vcid[0]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[0]*self.num_vc+vcid[0]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             vcid[0] = (vcid[0] + 1) % self.num_vc;
 //                             out_num_sent[0] += 1;
 //                         }
@@ -327,7 +327,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[0]*self.num_vc+vcid[0]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[0]*self.num_vc+vcid[0]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             vcid[0] = (vcid[0] + 1) % self.num_vc;
 //                             out_num_sent[0] += 1;
 //                         }
@@ -339,7 +339,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[0]*self.num_vc+vcid[0]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[0]*self.num_vc+vcid[0]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             vcid[0] = (vcid[0] + 1) % self.num_vc;
 //                             out_num_sent[0] += 1;
 //                         }
@@ -351,7 +351,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[2]*self.num_vc+vcid[2]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[2]*self.num_vc+vcid[2]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             vcid[2] = (vcid[2] + 1) % self.num_vc;
 //                             out_num_sent[2] += 1;
 //                         }
@@ -363,7 +363,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[1]*self.num_vc+vcid[1]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[1]*self.num_vc+vcid[1]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             vcid[1] = (vcid[1] + 1) % self.num_vc;
 //                             out_num_sent[1] += 1;
 //                         }
@@ -375,7 +375,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[1]*self.num_vc+vcid[1]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[1]*self.num_vc+vcid[1]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             vcid[1] = (vcid[1] + 1) % self.num_vc;
 //                             out_num_sent[1] += 1;
 //                         }
@@ -387,7 +387,7 @@
 //                             panic!("Wrong!");
 //                         } else {
 //                             let curr_time = self.time.tick();
-//                             self.out_stream[out_idx_vec[1]*self.num_vc+vcid[1]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+//                             self.out_stream[out_idx_vec[1]*self.num_vc+vcid[1]].enqueue(&self.time, ChannelElement::new(curr_time as u64, data_vec[i].clone())).unwrap();
 //                             vcid[1] = (vcid[1] + 1) % self.num_vc;
 //                             out_num_sent[1] += 1;
 //                         }
@@ -739,7 +739,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[4]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[4]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[4] += 1;
                         }
 
@@ -750,7 +750,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[3] += 1;
                         }
 
@@ -761,7 +761,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[0] += 1;
                         }
 
@@ -772,7 +772,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[0] += 1;
                         }
 
@@ -783,7 +783,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[0] += 1;
                         }
 
@@ -794,7 +794,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[2] += 1;
                         }
 
@@ -805,7 +805,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
 
@@ -816,7 +816,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
 
@@ -827,7 +827,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time+1 as u64, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
                         

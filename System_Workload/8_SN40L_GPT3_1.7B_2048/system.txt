@@ -10,8 +10,8 @@ accelerator {
 	word: 2
 	sram_cap: 524288
 	num_switch: 2080
-	num_vc: 3
+	num_vc: 16
 	buffer_depth: 1024
 	dram_bw: 1638
-	net_bw: 10
+	net_bw: 100
 }

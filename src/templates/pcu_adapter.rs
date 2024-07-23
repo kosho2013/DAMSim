@@ -74,7 +74,7 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_upstream<A> {
             for _ in 0..tmp
             {
                 let curr_time = self.time.tick();
-                self.out_stream.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
+                self.out_stream.enqueue(&self.time, ChannelElement::new(curr_time, in_data.clone())).unwrap();
             }
         }
         self.time.incr_cycles(1);
@@ -167,7 +167,7 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_downstream<A> {
                 {
                     let curr_time = self.time.tick();
                     let idx: usize = j.try_into().unwrap();
-                    self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time + 1, self.out_dst[j])).unwrap();
+                    self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time, self.out_dst[j])).unwrap();
                 }
             }
         }
@@ -263,8 +263,8 @@ impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_upstream<A> {
             for i in 0..tmp_inner
             {
                 let curr_time = self.time.tick();
-                self.out_stream_lane.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
-                self.out_stream_stage.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
+                self.out_stream_lane.enqueue(&self.time, ChannelElement::new(curr_time, in_data.clone())).unwrap();
+                self.out_stream_stage.enqueue(&self.time, ChannelElement::new(curr_time, in_data.clone())).unwrap();
             }
         }
         self.time.incr_cycles(1);
@@ -353,7 +353,7 @@ impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_downstream<A> {
                 {
                     let curr_time = self.time.tick();
                     let idx: usize = j.try_into().unwrap();
-                    self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time + 1, self.out_dst[j])).unwrap();
+                    self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time, self.out_dst[j])).unwrap();
                 }
             }
         }
