@@ -12,7 +12,7 @@ pub struct pmu_adapter_upstream<A: Clone> {
     pub in_len: usize,
     pub out_stream_wr_addr: Sender<usize>,
     pub out_stream_wr_data: Sender<usize>,
-    pub loop_bound: usize,
+    pub num_input: usize,
     pub counter: usize,
     pub dummy: A,
 }
@@ -26,7 +26,7 @@ pmu_adapter_upstream<A>: Context,
         in_len: usize,
         out_stream_wr_addr: Sender<usize>,
         out_stream_wr_data: Sender<usize>,
-        loop_bound: usize,
+        num_input: usize,
         counter: usize,
         dummy: A,
     ) -> Self {
@@ -35,7 +35,7 @@ pmu_adapter_upstream<A>: Context,
             in_len,
             out_stream_wr_addr,
             out_stream_wr_data,
-            loop_bound,
+            num_input,
             counter,
             dummy,
             context_info: Default::default(),
@@ -55,7 +55,7 @@ pmu_adapter_upstream<A>: Context,
 impl<A: DAMType + num::Num> Context for pmu_adapter_upstream<A> {
     fn run(&mut self) {
         let mut cnt: usize = 0;
-        for _ in 0..self.loop_bound {
+        for _ in 0..self.num_input {
             let mut in_vec = vec![];
 
             for j in 0..self.in_len
@@ -73,8 +73,8 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_upstream<A> {
                 self.out_stream_wr_data.enqueue(&self.time, ChannelElement::new(curr_time + 1, in_data.clone())).unwrap();
                 cnt += 1;
             }
-            self.time.incr_cycles(1);
         }
+        self.time.incr_cycles(1);
     }
 }
 
@@ -91,7 +91,7 @@ pub struct pmu_adapter_downstream<A: Clone> {
     pub out_stream: Vec<Sender<usize>>,
     pub out_len: usize,
     pub out_dst: Vec<usize>,
-    pub loop_bound: usize,
+    pub num_input: usize,
     pub counter: usize,
     pub dummy: A,
 }
@@ -105,7 +105,7 @@ pmu_adapter_downstream<A>: Context,
         out_stream: Vec<Sender<usize>>,
         out_len: usize,
         out_dst: Vec<usize>,
-        loop_bound: usize,
+        num_input: usize,
         counter: usize,
         dummy: A,
     ) -> Self {
@@ -114,7 +114,7 @@ pmu_adapter_downstream<A>: Context,
             out_stream,
             out_len,
             out_dst,
-            loop_bound,
+            num_input,
             counter,
             dummy,
             context_info: Default::default(),
@@ -132,7 +132,7 @@ pmu_adapter_downstream<A>: Context,
 
 impl<A: DAMType + num::Num> Context for pmu_adapter_downstream<A> {
     fn run(&mut self) {
-        let tmp = self.counter * self.loop_bound; 
+        let tmp = self.counter * self.num_input; 
         for i in 0..tmp
         {
             let in_data = self.in_stream.dequeue(&self.time).unwrap().data;
@@ -145,8 +145,8 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_downstream<A> {
                     let idx: usize = j.try_into().unwrap();
                     self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time + 1, self.out_dst[j])).unwrap();
                 }
-                self.time.incr_cycles(1);
             }
         }
+        self.time.incr_cycles(1);
     }
 }
