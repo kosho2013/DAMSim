@@ -494,7 +494,7 @@ fn main() {
 			let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..2
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_net.insert(j, sender);
 				receiver_map_net.insert(j, receiver);
 			}
@@ -503,7 +503,7 @@ fn main() {
 			let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..2
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_mem.insert(j, sender);
 				receiver_map_mem.insert(j, receiver);
 			}
@@ -512,7 +512,7 @@ fn main() {
 			let mut receiver_map_comp: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..num_kernel+1
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_comp.insert(j.try_into().unwrap(), sender);
 				receiver_map_comp.insert(j.try_into().unwrap(), receiver);
 			}
@@ -617,7 +617,7 @@ fn main() {
 			let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..2
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_mem.insert(j, sender);
 				receiver_map_mem.insert(j, receiver);
 			}
@@ -640,7 +640,7 @@ fn main() {
 			let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..2
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_net.insert(j, sender);
 				receiver_map_net.insert(j, receiver);
 			}
@@ -663,7 +663,7 @@ fn main() {
 			let mut receiver_map: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..num_of_connections
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map.insert(j, sender);
 				receiver_map.insert(j, receiver);
 			}
@@ -715,7 +715,7 @@ fn main() {
 						}
 					}
 
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
 					parent.add_child(gen);
@@ -728,8 +728,8 @@ fn main() {
 
 					if simd_or_systolic == "SIMD"
 					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
 						
 						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_upstream);
@@ -743,10 +743,10 @@ fn main() {
 					} else if simd_or_systolic == "Systolic"
 					{
 
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
+						let (sender3, receiver3) = parent.unbounded();
+						let (sender4, receiver4) = parent.unbounded();
 
 						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_upstream);
@@ -780,7 +780,7 @@ fn main() {
 					let mut tmp_dst_vec = vec![];
 					tmp_dst_vec.push(no_connection);
 
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
 					
@@ -789,8 +789,8 @@ fn main() {
 
 					if simd_or_systolic == "SIMD"
 					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
 						
 						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_upstream);
@@ -804,10 +804,10 @@ fn main() {
 					} else if simd_or_systolic == "Systolic"
 					{
 
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
+						let (sender3, receiver3) = parent.unbounded();
+						let (sender4, receiver4) = parent.unbounded();
 
 						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_upstream);
@@ -864,8 +864,8 @@ fn main() {
 
 					if simd_or_systolic == "SIMD"
 					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
 						
 						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_upstream);
@@ -880,10 +880,10 @@ fn main() {
 					{
 
 
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
+						let (sender3, receiver3) = parent.unbounded();
+						let (sender4, receiver4) = parent.unbounded();
 
 						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_upstream);
@@ -944,7 +944,7 @@ fn main() {
 					{
 						tmp_sender_vec.push(sender_map.remove(&pmu_sender_vec_tmp[k]).unwrap());
 					}
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
 					parent.add_child(gen);
@@ -964,7 +964,7 @@ fn main() {
 						tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
 					}
 
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
 					
@@ -1046,7 +1046,7 @@ fn main() {
 			let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..2
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_mem.insert(j, sender);
 				receiver_map_mem.insert(j, receiver);
 			}
@@ -1069,7 +1069,7 @@ fn main() {
 			let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..2
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_net.insert(j, sender);
 				receiver_map_net.insert(j, receiver);
 			}
@@ -1092,7 +1092,7 @@ fn main() {
 			let mut receiver_map: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..num_of_connections
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map.insert(j, sender);
 				receiver_map.insert(j, receiver);
 			}
@@ -1144,7 +1144,7 @@ fn main() {
 						}
 					}
 
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
 					parent.add_child(gen);
@@ -1157,8 +1157,8 @@ fn main() {
 
 					if simd_or_systolic == "SIMD"
 					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
 						
 						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_upstream);
@@ -1172,10 +1172,10 @@ fn main() {
 					} else if simd_or_systolic == "Systolic"
 					{
 
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
+						let (sender3, receiver3) = parent.unbounded();
+						let (sender4, receiver4) = parent.unbounded();
 
 						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_upstream);
@@ -1209,7 +1209,7 @@ fn main() {
 					let mut tmp_dst_vec = vec![];
 					tmp_dst_vec.push(no_connection);
 
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
 					
@@ -1218,8 +1218,8 @@ fn main() {
 
 					if simd_or_systolic == "SIMD"
 					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
 						
 						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_upstream);
@@ -1233,10 +1233,10 @@ fn main() {
 					} else if simd_or_systolic == "Systolic"
 					{
 
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
+						let (sender3, receiver3) = parent.unbounded();
+						let (sender4, receiver4) = parent.unbounded();
 
 						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_upstream);
@@ -1293,8 +1293,8 @@ fn main() {
 
 					if simd_or_systolic == "SIMD"
 					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
 						
 						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_upstream);
@@ -1308,10 +1308,10 @@ fn main() {
 					} else if simd_or_systolic == "Systolic"
 					{
 
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
+						let (sender3, receiver3) = parent.unbounded();
+						let (sender4, receiver4) = parent.unbounded();
 
 						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tmp_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_upstream);
@@ -1383,7 +1383,7 @@ fn main() {
 
 
 					}
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
 					parent.add_child(gen);
@@ -1395,11 +1395,11 @@ fn main() {
 
 
 
-					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-					let (ack_sender, ack_receiver) = parent.bounded(1024);
-					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+					let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+					let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+					let (ack_sender, ack_receiver) = parent.unbounded();
+					let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+					let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
@@ -1463,7 +1463,7 @@ fn main() {
 						tmp_receiver_vec.push(receiver_map.remove(&pmu_receiver_vec_tmp[k]).unwrap());
 					}
 
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let mut tmp_sender_vec: Vec<dam::channel::Sender<usize>> = vec![];
 					tmp_sender_vec.push(sender);
 
@@ -1475,11 +1475,11 @@ fn main() {
 
 
 
-					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-					let (ack_sender, ack_receiver) = parent.bounded(1024);
-					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+					let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+					let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+					let (ack_sender, ack_receiver) = parent.unbounded();
+					let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+					let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
@@ -1568,11 +1568,11 @@ fn main() {
 
 
 
-					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-					let (ack_sender, ack_receiver) = parent.bounded(1024);
-					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+					let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+					let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+					let (ack_sender, ack_receiver) = parent.unbounded();
+					let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+					let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 					let pmu_adapter_upstream = pmu_adapter_upstream::new(tmp_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
@@ -1696,7 +1696,7 @@ fn main() {
 			let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..2
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_mem.insert(j, sender);
 				receiver_map_mem.insert(j, receiver);
 			}
@@ -1719,7 +1719,7 @@ fn main() {
 			let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 			for j in 0..2
 			{
-				let (sender, receiver) = parent.bounded(1024);
+				let (sender, receiver) = parent.unbounded();
 				sender_map_net.insert(j, sender);
 				receiver_map_net.insert(j, receiver);
 			}
@@ -1755,7 +1755,7 @@ fn main() {
 
 				} else
 				{
-					let (sender, receiver) = parent.bounded(buffer_depth);
+					let (sender, receiver) = parent.unbounded();
 					sender_map_noc_global.insert(ele.clone(), sender);
 					receiver_map_noc_global.insert(ele.clone(), receiver);
 				}
@@ -1916,7 +1916,7 @@ fn main() {
 
 					for k in 0..pcu_sender_vec_tmp.len()
 					{
-						let (sender, receiver) = parent.bounded(1024);
+						let (sender, receiver) = parent.unbounded();
 						tile_sender_vec.push(sender);
 						router_receiver_vec.push(receiver);
 
@@ -1931,7 +1931,7 @@ fn main() {
 					
 
 
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
 					parent.add_child(gen);
@@ -1939,8 +1939,8 @@ fn main() {
 
 					if simd_or_systolic == "SIMD"
 					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
 						
 						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tile_receiver_vec, 1, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_upstream);
@@ -1952,10 +1952,10 @@ fn main() {
 						parent.add_child(simd_pcu_adapter_downstream);
 					} else if simd_or_systolic == "Systolic"
 					{
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
+						let (sender3, receiver3) = parent.unbounded();
+						let (sender4, receiver4) = parent.unbounded();
 
 						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tile_receiver_vec, 1, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_upstream);
@@ -1975,7 +1975,7 @@ fn main() {
 
 
 
-					let (sender, receiver) = parent.bounded(buffer_depth);
+					let (sender, receiver) = parent.unbounded();
 					let to_router_adapter = to_router_adapter::new(router_receiver_vec, pcu_sender_vec_tmp.len(), sender, num_input, dummy);
 					parent.add_child(to_router_adapter);
 
@@ -1999,13 +1999,13 @@ fn main() {
 					// let mut tile_dst_vec = vec![];
 					// for k in 0..pcu_receiver_vec_tmp.len()
 					// {
-					// 	let (sender, receiver) = parent.bounded(1024);
+					// 	let (sender, receiver) = parent.unbounded();
 					// 	router_sender_vec.push(sender);
 					// 	tile_receiver_vec.push(receiver);
 					// }
 					// tile_dst_vec.push(no_connection);
 
-					// let (sender, receiver) = parent.bounded(1024);
+					// let (sender, receiver) = parent.unbounded();
 					// tile_sender_vec.push(sender);
 					
 					
@@ -2013,8 +2013,8 @@ fn main() {
 
 					// if simd_or_systolic == "SIMD"
 					// {					
-					// 	let (sender1, receiver1) = parent.bounded(1024);
-					// 	let (sender2, receiver2) = parent.bounded(1024);
+					// 	let (sender1, receiver1) = parent.unbounded();
+					// 	let (sender2, receiver2) = parent.unbounded();
 						
 					// 	let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 					// 	parent.add_child(simd_pcu_adapter_upstream);
@@ -2026,10 +2026,10 @@ fn main() {
 					// 	parent.add_child(simd_pcu_adapter_downstream);
 					// } else if simd_or_systolic == "Systolic"
 					// {
-					// 	let (sender1, receiver1) = parent.bounded(1024);
-					// 	let (sender2, receiver2) = parent.bounded(1024);
-					// 	let (sender3, receiver3) = parent.bounded(1024);
-					// 	let (sender4, receiver4) = parent.bounded(1024);
+					// 	let (sender1, receiver1) = parent.unbounded();
+					// 	let (sender2, receiver2) = parent.unbounded();
+					// 	let (sender3, receiver3) = parent.unbounded();
+					// 	let (sender4, receiver4) = parent.unbounded();
 
 					// 	let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 					// 	parent.add_child(systolic_pcu_adapter_upstream);
@@ -2052,7 +2052,7 @@ fn main() {
 
 
 
-					let (sender, receiver) = parent.bounded(buffer_depth);
+					let (sender, receiver) = parent.unbounded();
 					router_out_stream.push(sender);
 
 					let tmp = used_link_map[&(x, y, "to_L".to_owned(), x, y, "to_L".to_owned())];
@@ -2091,13 +2091,13 @@ fn main() {
 
 					for k in 0..pcu_receiver_vec_tmp.len()
 					{
-						let (sender, receiver) = parent.bounded(1024);
+						let (sender, receiver) = parent.unbounded();
 						router_sender_vec.push(sender);
 						tile_receiver_vec.push(receiver);
 					}
 					for k in 0..pcu_sender_vec_tmp.len()
 					{
-						let (sender, receiver) = parent.bounded(1024);
+						let (sender, receiver) = parent.unbounded();
 						tile_sender_vec.push(sender);
 						router_receiver_vec.push(receiver);
 
@@ -2114,8 +2114,8 @@ fn main() {
 
 					if simd_or_systolic == "SIMD"
 					{					
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
 						
 						let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 						parent.add_child(simd_pcu_adapter_upstream);
@@ -2127,10 +2127,10 @@ fn main() {
 						parent.add_child(simd_pcu_adapter_downstream);
 					} else if simd_or_systolic == "Systolic"
 					{
-						let (sender1, receiver1) = parent.bounded(1024);
-						let (sender2, receiver2) = parent.bounded(1024);
-						let (sender3, receiver3) = parent.bounded(1024);
-						let (sender4, receiver4) = parent.bounded(1024);
+						let (sender1, receiver1) = parent.unbounded();
+						let (sender2, receiver2) = parent.unbounded();
+						let (sender3, receiver3) = parent.unbounded();
+						let (sender4, receiver4) = parent.unbounded();
 
 						let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 						parent.add_child(systolic_pcu_adapter_upstream);
@@ -2150,8 +2150,8 @@ fn main() {
 
 
 
-					let (sender1, receiver1) = parent.bounded(buffer_depth);
-					let (sender2, receiver2) = parent.bounded(buffer_depth);
+					let (sender1, receiver1) = parent.unbounded();
+					let (sender2, receiver2) = parent.unbounded();
 
 					router_in_stream.push(receiver1);
 
@@ -2337,7 +2337,7 @@ fn main() {
 
 					for k in 0..pmu_sender_vec_tmp.len()
 					{
-						let (sender, receiver) = parent.bounded(1024);
+						let (sender, receiver) = parent.unbounded();
 						tile_sender_vec.push(sender);
 						router_receiver_vec.push(receiver);
 
@@ -2351,7 +2351,7 @@ fn main() {
 					}
 
 					
-					let (sender, receiver) = parent.bounded(1024);
+					let (sender, receiver) = parent.unbounded();
 					let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 					let gen = GeneratorContext::new(iter, sender);
 					parent.add_child(gen);
@@ -2365,11 +2365,11 @@ fn main() {
 
 
 					// PMU setup
-					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-					let (ack_sender, ack_receiver) = parent.bounded(1024);
-					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+					let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+					let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+					let (ack_sender, ack_receiver) = parent.unbounded();
+					let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+					let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 					let pmu_adapter_upstream = pmu_adapter_upstream::new(tile_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
@@ -2418,7 +2418,7 @@ fn main() {
 
 
 
-					let (sender, receiver) = parent.bounded(buffer_depth);
+					let (sender, receiver) = parent.unbounded();
 					let to_router_adapter = to_router_adapter::new(router_receiver_vec, pmu_sender_vec_tmp.len(), sender, num_input, dummy);
 					parent.add_child(to_router_adapter);
 
@@ -2445,13 +2445,13 @@ fn main() {
 					// let mut tile_dst_vec = vec![];
 					// for k in 0..pmu_receiver_vec_tmp.len()
 					// {
-					// 	let (sender, receiver) = parent.bounded(1024);
+					// 	let (sender, receiver) = parent.unbounded();
 					// 	router_sender_vec.push(sender);
 					// 	tile_receiver_vec.push(receiver);
 					// }
 					// tile_dst_vec.push(no_connection);
 
-					// let (sender, receiver) = parent.bounded(1024);
+					// let (sender, receiver) = parent.unbounded();
 					// tile_sender_vec.push(sender);
 					
 					
@@ -2461,11 +2461,11 @@ fn main() {
 
 
 					// PMU setup
-					// let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-					// let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-					// let (ack_sender, ack_receiver) = parent.bounded(1024);
-					// let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-					// let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+					// let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+					// let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+					// let (ack_sender, ack_receiver) = parent.unbounded();
+					// let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+					// let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 					// let pmu_adapter_upstream = pmu_adapter_upstream::new(tile_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					// parent.add_child(pmu_adapter_upstream);
@@ -2513,7 +2513,7 @@ fn main() {
 
 
 
-					let (sender, receiver) = parent.bounded(buffer_depth);
+					let (sender, receiver) = parent.unbounded();
 					router_out_stream.push(sender);
 
 					let tmp = used_link_map[&(x, y, "to_L".to_owned(), x, y, "to_L".to_owned())];
@@ -2551,13 +2551,13 @@ fn main() {
 
 					for k in 0..pmu_receiver_vec_tmp.len()
 					{
-						let (sender, receiver) = parent.bounded(1024);
+						let (sender, receiver) = parent.unbounded();
 						router_sender_vec.push(sender);
 						tile_receiver_vec.push(receiver);
 					}
 					for k in 0..pmu_sender_vec_tmp.len()
 					{
-						let (sender, receiver) = parent.bounded(1024);
+						let (sender, receiver) = parent.unbounded();
 						tile_sender_vec.push(sender);
 						router_receiver_vec.push(receiver);
 
@@ -2574,11 +2574,11 @@ fn main() {
 
 
 					// PMU setup
-					let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-					let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-					let (ack_sender, ack_receiver) = parent.bounded(1024);
-					let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-					let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+					let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+					let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+					let (ack_sender, ack_receiver) = parent.unbounded();
+					let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+					let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 					let pmu_adapter_upstream = pmu_adapter_upstream::new(tile_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 					parent.add_child(pmu_adapter_upstream);
@@ -2626,8 +2626,8 @@ fn main() {
 
 
 
-					let (sender1, receiver1) = parent.bounded(buffer_depth);
-					let (sender2, receiver2) = parent.bounded(buffer_depth);
+					let (sender1, receiver1) = parent.unbounded();
+					let (sender2, receiver2) = parent.unbounded();
 					router_in_stream.push(receiver1);
 
 					let tmp = used_link_map[&(x, y, "from_L".to_owned(), x, y, "from_L".to_owned())];
@@ -2751,7 +2751,7 @@ fn main() {
 		// 	let mut receiver_map_mem: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 		// 	for j in 0..2
 		// 	{
-		// 		let (sender, receiver) = parent.bounded(1024);
+		// 		let (sender, receiver) = parent.unbounded();
 		// 		sender_map_mem.insert(j, sender);
 		// 		receiver_map_mem.insert(j, receiver);
 		// 	}
@@ -2774,7 +2774,7 @@ fn main() {
 		// 	let mut receiver_map_net: HashMap<usize, dam::channel::Receiver<usize>> = HashMap::new();
 		// 	for j in 0..2
 		// 	{
-		// 		let (sender, receiver) = parent.bounded(1024);
+		// 		let (sender, receiver) = parent.unbounded();
 		// 		sender_map_net.insert(j, sender);
 		// 		receiver_map_net.insert(j, receiver);
 		// 	}
@@ -2814,7 +2814,7 @@ fn main() {
 		// 			let mut tmp_receiver = vec![];
 		// 			for j in 0..num_vc
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(buffer_depth);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tmp_sender.push(sender);
 		// 				tmp_receiver.push(receiver);
 		// 			}
@@ -3010,7 +3010,7 @@ fn main() {
 
 		// 			for k in 0..pcu_sender_vec_tmp.len()
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(1024);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tile_sender_vec.push(sender);
 		// 				router_receiver_vec.push(receiver);
 
@@ -3025,7 +3025,7 @@ fn main() {
 					
 
 
-		// 			let (sender, receiver) = parent.bounded(1024);
+		// 			let (sender, receiver) = parent.unbounded();
 		// 			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 		// 			let gen = GeneratorContext::new(iter, sender);
 		// 			parent.add_child(gen);
@@ -3033,8 +3033,8 @@ fn main() {
 
 		// 			if simd_or_systolic == "SIMD"
 		// 			{					
-		// 				let (sender1, receiver1) = parent.bounded(1024);
-		// 				let (sender2, receiver2) = parent.bounded(1024);
+		// 				let (sender1, receiver1) = parent.unbounded();
+		// 				let (sender2, receiver2) = parent.unbounded();
 						
 		// 				let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tile_receiver_vec, 1, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 		// 				parent.add_child(simd_pcu_adapter_upstream);
@@ -3046,10 +3046,10 @@ fn main() {
 		// 				parent.add_child(simd_pcu_adapter_downstream);
 		// 			} else if simd_or_systolic == "Systolic"
 		// 			{
-		// 				let (sender1, receiver1) = parent.bounded(1024);
-		// 				let (sender2, receiver2) = parent.bounded(1024);
-		// 				let (sender3, receiver3) = parent.bounded(1024);
-		// 				let (sender4, receiver4) = parent.bounded(1024);
+		// 				let (sender1, receiver1) = parent.unbounded();
+		// 				let (sender2, receiver2) = parent.unbounded();
+		// 				let (sender3, receiver3) = parent.unbounded();
+		// 				let (sender4, receiver4) = parent.unbounded();
 
 		// 				let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tile_receiver_vec, 1, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 		// 				parent.add_child(systolic_pcu_adapter_upstream);
@@ -3071,7 +3071,7 @@ fn main() {
 		// 			let mut tmp_receiver = vec![];
 		// 			for _ in 0..num_vc
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(buffer_depth);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tmp_sender.push(sender);
 		// 				tmp_receiver.push(receiver);
 		// 			}
@@ -3105,13 +3105,13 @@ fn main() {
 		// 			// let mut tile_dst_vec = vec![];
 		// 			// for k in 0..pcu_receiver_vec_tmp.len()
 		// 			// {
-		// 			// 	let (sender, receiver) = parent.bounded(1024);
+		// 			// 	let (sender, receiver) = parent.unbounded();
 		// 			// 	router_sender_vec.push(sender);
 		// 			// 	tile_receiver_vec.push(receiver);
 		// 			// }
 		// 			// tile_dst_vec.push(no_connection);
 
-		// 			// let (sender, receiver) = parent.bounded(1024);
+		// 			// let (sender, receiver) = parent.unbounded();
 		// 			// tile_sender_vec.push(sender);
 					
 					
@@ -3119,8 +3119,8 @@ fn main() {
 
 		// 			// if simd_or_systolic == "SIMD"
 		// 			// {					
-		// 			// 	let (sender1, receiver1) = parent.bounded(1024);
-		// 			// 	let (sender2, receiver2) = parent.bounded(1024);
+		// 			// 	let (sender1, receiver1) = parent.unbounded();
+		// 			// 	let (sender2, receiver2) = parent.unbounded();
 						
 		// 			// 	let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 		// 			// 	parent.add_child(simd_pcu_adapter_upstream);
@@ -3132,10 +3132,10 @@ fn main() {
 		// 			// 	parent.add_child(simd_pcu_adapter_downstream);
 		// 			// } else if simd_or_systolic == "Systolic"
 		// 			// {
-		// 			// 	let (sender1, receiver1) = parent.bounded(1024);
-		// 			// 	let (sender2, receiver2) = parent.bounded(1024);
-		// 			// 	let (sender3, receiver3) = parent.bounded(1024);
-		// 			// 	let (sender4, receiver4) = parent.bounded(1024);
+		// 			// 	let (sender1, receiver1) = parent.unbounded();
+		// 			// 	let (sender2, receiver2) = parent.unbounded();
+		// 			// 	let (sender3, receiver3) = parent.unbounded();
+		// 			// 	let (sender4, receiver4) = parent.unbounded();
 
 		// 			// 	let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 		// 			// 	parent.add_child(systolic_pcu_adapter_upstream);
@@ -3162,7 +3162,7 @@ fn main() {
 		// 			let mut tmp_receiver = vec![];
 		// 			for _ in 0..num_vc
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(buffer_depth);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tmp_sender.push(sender);
 		// 				tmp_receiver.push(receiver);
 		// 			}
@@ -3215,13 +3215,13 @@ fn main() {
 
 		// 			for k in 0..pcu_receiver_vec_tmp.len()
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(1024);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				router_sender_vec.push(sender);
 		// 				tile_receiver_vec.push(receiver);
 		// 			}
 		// 			for k in 0..pcu_sender_vec_tmp.len()
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(1024);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tile_sender_vec.push(sender);
 		// 				router_receiver_vec.push(receiver);
 
@@ -3238,8 +3238,8 @@ fn main() {
 
 		// 			if simd_or_systolic == "SIMD"
 		// 			{					
-		// 				let (sender1, receiver1) = parent.bounded(1024);
-		// 				let (sender2, receiver2) = parent.bounded(1024);
+		// 				let (sender1, receiver1) = parent.unbounded();
+		// 				let (sender2, receiver2) = parent.unbounded();
 						
 		// 				let simd_pcu_adapter_upstream = simd_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, num_input as usize, M as usize, K as usize, N as usize, dummy);
 		// 				parent.add_child(simd_pcu_adapter_upstream);
@@ -3251,10 +3251,10 @@ fn main() {
 		// 				parent.add_child(simd_pcu_adapter_downstream);
 		// 			} else if simd_or_systolic == "Systolic"
 		// 			{
-		// 				let (sender1, receiver1) = parent.bounded(1024);
-		// 				let (sender2, receiver2) = parent.bounded(1024);
-		// 				let (sender3, receiver3) = parent.bounded(1024);
-		// 				let (sender4, receiver4) = parent.bounded(1024);
+		// 				let (sender1, receiver1) = parent.unbounded();
+		// 				let (sender2, receiver2) = parent.unbounded();
+		// 				let (sender3, receiver3) = parent.unbounded();
+		// 				let (sender4, receiver4) = parent.unbounded();
 
 		// 				let systolic_pcu_adapter_upstream = systolic_pcu_adapter_upstream::new(tile_receiver_vec, pcu_receiver_vec_tmp.len() as usize, sender1, sender2, num_input as usize, M as usize, K as usize, N as usize, lane_dim, stage_dim, dummy);
 		// 				parent.add_child(systolic_pcu_adapter_upstream);
@@ -3279,8 +3279,8 @@ fn main() {
 		// 			let mut tmp_receiver2 = vec![];
 		// 			for _ in 0..num_vc
 		// 			{
-		// 				let (sender1, receiver1) = parent.bounded(buffer_depth);
-		// 				let (sender2, receiver2) = parent.bounded(buffer_depth);
+		// 				let (sender1, receiver1) = parent.unbounded();
+		// 				let (sender2, receiver2) = parent.unbounded();
 		// 				tmp_sender1.push(sender1);
 		// 				tmp_receiver1.push(receiver1);
 		// 				tmp_sender2.push(sender2);
@@ -3512,7 +3512,7 @@ fn main() {
 
 		// 			for k in 0..pmu_sender_vec_tmp.len()
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(1024);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tile_sender_vec.push(sender);
 		// 				router_receiver_vec.push(receiver);
 
@@ -3526,7 +3526,7 @@ fn main() {
 		// 			}
 
 					
-		// 			let (sender, receiver) = parent.bounded(1024);
+		// 			let (sender, receiver) = parent.unbounded();
 		// 			let iter = || (0..(num_input)).map(|i| (i as usize) * 1_usize);
 		// 			let gen = GeneratorContext::new(iter, sender);
 		// 			parent.add_child(gen);
@@ -3540,11 +3540,11 @@ fn main() {
 
 
 		// 			// PMU setup
-		// 			let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-		// 			let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-		// 			let (ack_sender, ack_receiver) = parent.bounded(1024);
-		// 			let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-		// 			let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+		// 			let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+		// 			let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+		// 			let (ack_sender, ack_receiver) = parent.unbounded();
+		// 			let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+		// 			let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 		// 			let pmu_adapter_upstream = pmu_adapter_upstream::new(tile_receiver_vec, 1, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 		// 			parent.add_child(pmu_adapter_upstream);
@@ -3596,7 +3596,7 @@ fn main() {
 		// 			let mut tmp_receiver = vec![];
 		// 			for _ in 0..num_vc
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(buffer_depth);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tmp_sender.push(sender);
 		// 				tmp_receiver.push(receiver);
 		// 			}
@@ -3634,13 +3634,13 @@ fn main() {
 		// 			// let mut tile_dst_vec = vec![];
 		// 			// for k in 0..pmu_receiver_vec_tmp.len()
 		// 			// {
-		// 			// 	let (sender, receiver) = parent.bounded(1024);
+		// 			// 	let (sender, receiver) = parent.unbounded();
 		// 			// 	router_sender_vec.push(sender);
 		// 			// 	tile_receiver_vec.push(receiver);
 		// 			// }
 		// 			// tile_dst_vec.push(no_connection);
 
-		// 			// let (sender, receiver) = parent.bounded(1024);
+		// 			// let (sender, receiver) = parent.unbounded();
 		// 			// tile_sender_vec.push(sender);
 					
 					
@@ -3650,11 +3650,11 @@ fn main() {
 
 
 		// 			// PMU setup
-		// 			// let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-		// 			// let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-		// 			// let (ack_sender, ack_receiver) = parent.bounded(1024);
-		// 			// let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-		// 			// let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+		// 			// let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+		// 			// let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+		// 			// let (ack_sender, ack_receiver) = parent.unbounded();
+		// 			// let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+		// 			// let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 		// 			// let pmu_adapter_upstream = pmu_adapter_upstream::new(tile_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 		// 			// parent.add_child(pmu_adapter_upstream);
@@ -3703,7 +3703,7 @@ fn main() {
 		// 			let mut tmp_receiver = vec![];
 		// 			for _ in 0..num_vc
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(buffer_depth);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tmp_sender.push(sender);
 		// 				tmp_receiver.push(receiver);
 		// 			}
@@ -3756,13 +3756,13 @@ fn main() {
 
 		// 			for k in 0..pmu_receiver_vec_tmp.len()
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(1024);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				router_sender_vec.push(sender);
 		// 				tile_receiver_vec.push(receiver);
 		// 			}
 		// 			for k in 0..pmu_sender_vec_tmp.len()
 		// 			{
-		// 				let (sender, receiver) = parent.bounded(1024);
+		// 				let (sender, receiver) = parent.unbounded();
 		// 				tile_sender_vec.push(sender);
 		// 				router_receiver_vec.push(receiver);
 
@@ -3779,11 +3779,11 @@ fn main() {
 
 
 		// 			// PMU setup
-		// 			let (wr_addr_sender, wr_addr_receiver) = parent.bounded(1024);
-		// 			let (wr_data_sender, wr_data_receiver) = parent.bounded(1024);
-		// 			let (ack_sender, ack_receiver) = parent.bounded(1024);
-		// 			let (rd_addr_sender, rd_addr_receiver) = parent.bounded(1024);
-		// 			let (rd_data_sender, rd_data_receiver) = parent.bounded(1024);
+		// 			let (wr_addr_sender, wr_addr_receiver) = parent.unbounded();
+		// 			let (wr_data_sender, wr_data_receiver) = parent.unbounded();
+		// 			let (ack_sender, ack_receiver) = parent.unbounded();
+		// 			let (rd_addr_sender, rd_addr_receiver) = parent.unbounded();
+		// 			let (rd_data_sender, rd_data_receiver) = parent.unbounded();
 
 		// 			let pmu_adapter_upstream = pmu_adapter_upstream::new(tile_receiver_vec, pmu_receiver_vec_tmp.len() as usize, wr_addr_sender, wr_data_sender, num_input as usize, pmu_counter_tmp, dummy);
 		// 			parent.add_child(pmu_adapter_upstream);
@@ -3837,8 +3837,8 @@ fn main() {
 		// 			let mut tmp_receiver2 = vec![];
 		// 			for _ in 0..num_vc
 		// 			{
-		// 				let (sender1, receiver1) = parent.bounded(buffer_depth);
-		// 				let (sender2, receiver2) = parent.bounded(buffer_depth);
+		// 				let (sender1, receiver1) = parent.unbounded();
+		// 				let (sender2, receiver2) = parent.unbounded();
 		// 				tmp_sender1.push(sender1);
 		// 				tmp_receiver1.push(receiver1);
 		// 				tmp_sender2.push(sender2);
