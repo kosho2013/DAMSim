@@ -9,7 +9,7 @@ accelerator {
 	freq: 1.25
 	word: 2
 	sram_cap: 524288
-	num_switch: 64
+	num_switch: 256
 	num_vc: 3
 	buffer_depth: 1024
 	dram_bw: 150
