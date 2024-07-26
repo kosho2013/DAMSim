@@ -150,3 +150,11 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_downstream<A> {
         self.time.incr_cycles(1);
     }
 }
+
+
+
+
+
+
+
+

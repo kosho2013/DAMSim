@@ -663,7 +663,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
         
         
 
-        // println!("x:{}, y:{}, in_idx_vec{:?}, in_num_received_limit{:?}, out_idx_vec{:?}, out_num_sent_limit{:?}   ", self.x, self.y, in_idx_vec, in_num_received_limit, out_idx_vec, out_num_sent_limit);
+        println!("x:{}, y:{}, in_idx_vec{:?}, in_num_received_limit{:?}, out_idx_vec{:?}, out_num_sent_limit{:?}   ", self.x, self.y, in_idx_vec, in_num_received_limit, out_idx_vec, out_num_sent_limit);
 
 
 
@@ -739,7 +739,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[4]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[4]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[4] += 1;
                         }
 
@@ -750,7 +750,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[3] += 1;
                         }
 
@@ -761,7 +761,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[0] += 1;
                         }
 
@@ -772,7 +772,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[0] += 1;
                         }
 
@@ -783,7 +783,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[0] += 1;
                         }
 
@@ -794,7 +794,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[2] += 1;
                         }
 
@@ -805,7 +805,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
 
@@ -816,7 +816,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
 
@@ -827,7 +827,7 @@ impl<A: DAMType + num::Num> Context for router<A> {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time, data_vec[i].clone())).unwrap();
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
                         
@@ -885,5 +885,126 @@ impl<A: DAMType + num::Num> Context for router<A> {
             }
 
         }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use dam::shim::RunMode;
+    use dam::simulation::{DotConvertible, InitializationOptions, InitializationOptionsBuilder, ProgramBuilder, RunOptions, RunOptionsBuilder};
+
+    use dam::{templates::ops::ALUAddOp, utility_contexts::*};
+
+    use crate::templates::primitive::{ALUExpOp, Exp, Token};
+    use crate::templates::router::router;
+    use crate::token_vec;
+
+    #[test]
+    fn test_router() {
+        let mut parent = ProgramBuilder::default();
+        
+
+
+        let (sender1, receiver1) = parent.bounded(1024);
+        let (sender2, receiver2) = parent.bounded(1024);
+        let (sender3, receiver3) = parent.bounded(1024);
+        let (sender4, receiver4) = parent.bounded(1024);
+        let (sender5, receiver5) = parent.bounded(1024);
+
+
+
+        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
+        let gen1 = GeneratorContext::new(iter, sender1);
+		parent.add_child(gen1);
+
+        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
+        let gen2 = GeneratorContext::new(iter, sender2);
+		parent.add_child(gen2);
+
+        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
+        let gen3 = GeneratorContext::new(iter, sender3);
+		parent.add_child(gen3);
+
+        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
+        let gen4 = GeneratorContext::new(iter, sender4);
+		parent.add_child(gen4);
+
+
+
+
+        let mut in_stream = vec![];
+        in_stream.push(receiver1);
+        in_stream.push(receiver2);
+        in_stream.push(receiver3);
+        in_stream.push(receiver4);
+
+        let mut out_stream = vec![];
+        out_stream.push(sender5);
+
+        let in_len = 4;
+        let mut in_dict = HashMap::new();
+        in_dict.insert("N_in".to_owned(), (0, 1));
+        in_dict.insert("S_in".to_owned(), (1, 1));
+        in_dict.insert("E_in".to_owned(), (2, 1));
+        in_dict.insert("W_in".to_owned(), (3, 1));
+
+        let mut out_dict = HashMap::new();
+        out_dict.insert("L_out".to_owned(), (0, 4));
+        let out_len = 1;
+
+
+        let x_dim = 1;
+        let y_dim = 1;
+        let x = 0;
+        let y = 0;
+        let num_input = 1000;
+        let num_vc = 10;
+        let dummy = 0;
+
+
+        let router = router::new(in_stream, in_dict, in_len, out_stream, out_dict, out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+        parent.add_child(router);
+
+
+
+        let con1 = PrinterContext::new(receiver5);
+		parent.add_child(con1);
+        
+
+        
+
+        // run DAM
+			let initialized: dam::simulation::Initialized = parent
+			.initialize(
+				InitializationOptionsBuilder::default()
+					.run_flavor_inference(false)
+					.build()
+					.unwrap(),
+			)
+			.unwrap();
+			println!("{}", initialized.to_dot_string());
+
+
+			let executed = initialized.run(
+				RunOptionsBuilder::default()
+					.mode(RunMode::Simple)
+					.build()
+					.unwrap(),
+			);
+			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
+
+
     }
 }

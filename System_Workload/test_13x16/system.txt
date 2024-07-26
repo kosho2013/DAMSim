@@ -11,7 +11,7 @@ accelerator {
 	sram_cap: 524288
 	num_switch: 208
 	num_vc: 16
-	buffer_depth: 1024
+	buffer_depth: 10240
 	dram_bw: 150
 	net_bw: 50
 }
