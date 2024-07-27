@@ -3,9 +3,11 @@ syntax = "proto3";
 package setup;
 
 message Accelerator {
-	// mesh
+	// topology
 	int64 x_dim = 1;
 	int64 y_dim = 2;
+	string noc_topology = 20;
+	string placement = 21;
 	int64 num_compute_tile = 3;
 	int64 num_memory_tile = 4;
 	
