@@ -2,6 +2,7 @@ num_chip: 1
 accelerator {
 	x_dim: 2
 	y_dim: 4
+	noc_topology: "mesh"
 	num_compute_tile: 4
 	num_memory_tile: 4
 	lane_dim: 32
@@ -10,7 +11,7 @@ accelerator {
 	word: 2
 	sram_cap: 524288
 	num_switch: 8
-	num_vc: 32
+	num_vc: 16
 	buffer_depth: 32
 	dram_bw: 150
 	net_bw: 50
