@@ -6,6 +6,8 @@ pub mod pcu_adapter;
 pub mod pmu_adapter;
 
 pub mod router_adapter;
-pub mod router;
+pub mod router_mesh;
+pub mod router_sho_mesh;
+pub mod router_sn_mesh;
 
 pub mod primitive;
