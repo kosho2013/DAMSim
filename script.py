@@ -5,7 +5,7 @@ A = ['diagonalwise', 'rowwise']
 B = ['vc1', 'vc8', 'vc64']
 
 def run(a, b): 
-    os.system('./run.sh System_Workload/8_SN40L_GPT3_1.7B_2048/mesh/'+a+'/'+b+' 2_2 > System_Workload/8_SN40L_GPT3_1.7B_2048/mesh/'+a+'/'+b+'/2_2.txt')
+    os.system('./run.sh System_Workload/8_SN40L_GPT3_1.7B_2048/sho_mesh/'+a+'/'+b+' 2_2 > System_Workload/8_SN40L_GPT3_1.7B_2048/sho_mesh/'+a+'/'+b+'/2_2.txt')
 
 programs = []
 for a in A:
