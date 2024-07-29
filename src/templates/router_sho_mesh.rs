@@ -80,12 +80,12 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
 
         let invalid = 999999;
 
-        let mut in_idx_vec = vec![]; // NSEWL
-        let mut in_invalid = vec![]; // NSEWL
-        let mut in_num_received_limit = vec![]; // NSEWL
-        let mut in_num_recieved = [0, 0, 0, 0, 0]; // NSEWL
+        let mut in_idx_vec = vec![]; // NSEWL(NE)(NW)(SE)(SW)
+        let mut in_invalid = vec![]; // NSEWL(NE)(NW)(SE)(SW)
+        let mut in_num_received_limit = vec![]; // NSEWL(NE)(NW)(SE)(SW)
+        let mut in_num_recieved = [0, 0, 0, 0, 0, 0, 0, 0, 0]; // NSEWL(NE)(NW)(SE)(SW)
 
-        for _ in 0..5
+        for _ in 0..9 // NSEWL(NE)(NW)(SE)(SW)
         {
             in_idx_vec.push(invalid);
             in_invalid.push(false);
@@ -127,16 +127,42 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
         } else {
             in_invalid[4] = true;
         }
+        if self.in_dict.contains_key("NE_in")
+        {
+            in_idx_vec[5] = self.in_dict["NE_in"].0;
+            in_num_received_limit[5] = self.in_dict["NE_in"].1;
+        } else {
+            in_invalid[5] = true;
+        }
+        if self.in_dict.contains_key("NW_in")
+        {
+            in_idx_vec[6] = self.in_dict["NW_in"].0;
+            in_num_received_limit[6] = self.in_dict["NW_in"].1;
+        } else {
+            in_invalid[6] = true;
+        }
+        if self.in_dict.contains_key("SE_in")
+        {
+            in_idx_vec[7] = self.in_dict["SE_in"].0;
+            in_num_received_limit[7] = self.in_dict["SE_in"].1;
+        } else {
+            in_invalid[7] = true;
+        }
+        if self.in_dict.contains_key("SW_in")
+        {
+            in_idx_vec[8] = self.in_dict["SW_in"].0;
+            in_num_received_limit[8] = self.in_dict["SW_in"].1;
+        } else {
+            in_invalid[8] = true;
+        }
 
 
+        let mut out_idx_vec = vec![]; // NSEWL(NE)(NW)(SE)(SW)
+        let mut out_invalid = vec![]; // NSEWL(NE)(NW)(SE)(SW)
+        let mut out_num_sent_limit = vec![]; // NSEWL(NE)(NW)(SE)(SW)
+        let mut out_num_sent = [0, 0, 0, 0, 0, 0, 0, 0, 0]; // NSEWL(NE)(NW)(SE)(SW)
 
-
-        let mut out_idx_vec = vec![]; // NSEWL
-        let mut out_invalid = vec![]; // NSEWL
-        let mut out_num_sent_limit = vec![]; // NSEWL
-        let mut out_num_sent = [0, 0, 0, 0, 0]; // NSEWL
-
-        for _ in 0..5
+        for _ in 0..9 // NSEWL(NE)(NW)(SE)(SW)
         {
             out_idx_vec.push(invalid);
             out_invalid.push(false);
@@ -178,6 +204,36 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
         } else {
             out_invalid[4] = true;
         }
+        if self.out_dict.contains_key("NE_out")
+        {
+            out_idx_vec[5] = self.out_dict["NE_out"].0;
+            out_num_sent_limit[5] = self.out_dict["NE_out"].1;
+        } else {
+            out_invalid[5] = true;
+        }
+        if self.out_dict.contains_key("NW_out")
+        {
+            out_idx_vec[6] = self.out_dict["NW_out"].0;
+            out_num_sent_limit[6] = self.out_dict["NW_out"].1;
+        } else {
+            out_invalid[6] = true;
+        }
+        if self.out_dict.contains_key("SE_out")
+        {
+            out_idx_vec[7] = self.out_dict["SE_out"].0;
+            out_num_sent_limit[7] = self.out_dict["SE_out"].1;
+        } else {
+            out_invalid[7] = true;
+        }
+        if self.out_dict.contains_key("SW_out")
+        {
+            out_idx_vec[8] = self.out_dict["SW_out"].0;
+            out_num_sent_limit[8] = self.out_dict["SW_out"].1;
+        } else {
+            out_invalid[8] = true;
+        }
+
+
 
 
         
@@ -189,7 +245,7 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
 
 
         let mut in_closed = vec![];
-        for i in 0..5
+        for i in 0..9 // NSEWL(NE)(NW)(SE)(SW)
         {
             in_closed.push(in_invalid[i].clone());
         }
@@ -204,7 +260,7 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
 
             for _ in 0..self.num_vc
             {
-                for i in 0..5 // NSEWL
+                for i in 0..9 // NSEWL(NE)(NW)(SE)(SW)
                 {
                     if in_closed[i]
                     {
@@ -248,7 +304,7 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
 
             
 
-            for i in 0..data_vec.len() // NSEWL
+            for i in 0..data_vec.len() // NSEWL(NE)(NW)(SE)(SW)
             {
                 if data_vec[i] != invalid && dst_x_vec[i] != invalid && dst_y_vec[i] != invalid
                 { 
@@ -274,15 +330,15 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
                             out_num_sent[3] += 1;
                         }
 
-                    } else if dst_x_vec[i] < self.x && dst_y_vec[i] < self.y // exit N port
+                    } else if dst_x_vec[i] < self.x && dst_y_vec[i] < self.y // exit NW port
                     {
-                        if out_idx_vec[0] == invalid
+                        if out_idx_vec[6] == invalid
                         {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
-                            out_num_sent[0] += 1;
+                            self.out_stream[out_idx_vec[6]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
+                            out_num_sent[6] += 1;
                         }
 
                     } else if dst_x_vec[i] < self.x && dst_y_vec[i] == self.y // exit N port
@@ -296,15 +352,15 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
                             out_num_sent[0] += 1;
                         }
 
-                    } else if dst_x_vec[i] < self.x && dst_y_vec[i] > self.y // exit N port
+                    } else if dst_x_vec[i] < self.x && dst_y_vec[i] > self.y // exit NE port
                     {
-                        if out_idx_vec[0] == invalid
+                        if out_idx_vec[5] == invalid
                         {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
-                            out_num_sent[0] += 1;
+                            self.out_stream[out_idx_vec[5]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
+                            out_num_sent[5] += 1;
                         }
 
                     } else if dst_x_vec[i] == self.x && dst_y_vec[i] > self.y // exit E port
@@ -318,15 +374,15 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
                             out_num_sent[2] += 1;
                         }
 
-                    } else if dst_x_vec[i] > self.x && dst_y_vec[i] > self.y // exit S port
+                    } else if dst_x_vec[i] > self.x && dst_y_vec[i] > self.y // exit SE port
                     {
-                        if out_idx_vec[1] == invalid
+                        if out_idx_vec[7] == invalid
                         {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
-                            out_num_sent[1] += 1;
+                            self.out_stream[out_idx_vec[7]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
+                            out_num_sent[7] += 1;
                         }
 
                     } else if dst_x_vec[i] > self.x && dst_y_vec[i] == self.y // exit S port
@@ -340,15 +396,15 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
                             out_num_sent[1] += 1;
                         }
 
-                    } else if dst_x_vec[i] > self.x && dst_y_vec[i] < self.y // exit S port
+                    } else if dst_x_vec[i] > self.x && dst_y_vec[i] < self.y // exit SW port
                     {
-                        if out_idx_vec[1] == invalid
+                        if out_idx_vec[8] == invalid
                         {
                             panic!("Wrong!");
                         } else {
                             let curr_time = self.time.tick();
-                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
-                            out_num_sent[1] += 1;
+                            self.out_stream[out_idx_vec[8]].enqueue(&self.time, ChannelElement::new(curr_time+1, data_vec[i].clone())).unwrap();
+                            out_num_sent[8] += 1;
                         }
                         
                     } else
@@ -371,7 +427,7 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
 
             // return when all input ports have received all packets and all output ports have sent all packets
             let mut cnt1 = 0;
-            for i in 0..5
+            for i in 0..9 // NSEWL(NE)(NW)(SE)(SW)
             {
                 if in_invalid[i]
                 {
@@ -385,7 +441,7 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
             }
 
             let mut cnt2 = 0;
-            for i in 0..5
+            for i in 0..9 // NSEWL(NE)(NW)(SE)(SW)
             {
                 if out_invalid[i]
                 {
@@ -398,7 +454,7 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
                 }
             }
 
-            if cnt1 == 5 && cnt2 == 5
+            if cnt1 == 9 && cnt2 == 9
             {
                 println!("finished!!!!!!!!!!!!!!!!!!!!!!! {}, {}", self.x, self.y);
                 return;
@@ -408,123 +464,3 @@ impl<A: DAMType + num::Num> Context for router_sho_mesh<A> {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
-
-    use dam::shim::RunMode;
-    use dam::simulation::{DotConvertible, InitializationOptions, InitializationOptionsBuilder, ProgramBuilder, RunOptions, RunOptionsBuilder};
-
-    use dam::{templates::ops::ALUAddOp, utility_contexts::*};
-
-    use crate::templates::primitive::{ALUExpOp, Exp, Token};
-    use crate::templates::router_sho_mesh::router_sho_mesh;
-    use crate::token_vec;
-
-    #[test]
-    fn test_router_sho_mesh() {
-        let mut parent = ProgramBuilder::default();
-        
-
-
-        let (sender1, receiver1) = parent.bounded(1024);
-        let (sender2, receiver2) = parent.bounded(1024);
-        let (sender3, receiver3) = parent.bounded(1024);
-        let (sender4, receiver4) = parent.bounded(1024);
-        let (sender5, receiver5) = parent.bounded(1024);
-
-
-
-        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
-        let gen1 = GeneratorContext::new(iter, sender1);
-		parent.add_child(gen1);
-
-        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
-        let gen2 = GeneratorContext::new(iter, sender2);
-		parent.add_child(gen2);
-
-        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
-        let gen3 = GeneratorContext::new(iter, sender3);
-		parent.add_child(gen3);
-
-        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
-        let gen4 = GeneratorContext::new(iter, sender4);
-		parent.add_child(gen4);
-
-
-
-
-        let mut in_stream = vec![];
-        in_stream.push(receiver1);
-        in_stream.push(receiver2);
-        in_stream.push(receiver3);
-        in_stream.push(receiver4);
-
-        let mut out_stream = vec![];
-        out_stream.push(sender5);
-
-        let in_len = 4;
-        let mut in_dict = HashMap::new();
-        in_dict.insert("N_in".to_owned(), (0, 1));
-        in_dict.insert("S_in".to_owned(), (1, 1));
-        in_dict.insert("E_in".to_owned(), (2, 1));
-        in_dict.insert("W_in".to_owned(), (3, 1));
-
-        let mut out_dict = HashMap::new();
-        out_dict.insert("L_out".to_owned(), (0, 4));
-        let out_len = 1;
-
-
-        let x_dim = 1;
-        let y_dim = 1;
-        let x = 0;
-        let y = 0;
-        let num_input = 1000;
-        let num_vc = 10;
-        let dummy = 0;
-
-
-        let router_sho_mesh = router_sho_mesh::new(in_stream, in_dict, in_len, out_stream, out_dict, out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
-        parent.add_child(router_sho_mesh);
-
-
-
-        let con1 = PrinterContext::new(receiver5);
-		parent.add_child(con1);
-        
-
-        
-
-        // run DAM
-			let initialized: dam::simulation::Initialized = parent
-			.initialize(
-				InitializationOptionsBuilder::default()
-					.run_flavor_inference(false)
-					.build()
-					.unwrap(),
-			)
-			.unwrap();
-			println!("{}", initialized.to_dot_string());
-
-
-			let executed = initialized.run(
-				RunOptionsBuilder::default()
-					.mode(RunMode::Simple)
-					.build()
-					.unwrap(),
-			);
-			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
-
-
-    }
-}

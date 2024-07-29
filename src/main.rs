@@ -77,7 +77,6 @@ fn main() {
 
 
 	let mut dfmodel_time: Vec<usize> = vec![];
-	let mut experiment_time: Vec<usize> = Vec::new();
 
 
 	
@@ -1100,7 +1099,7 @@ fn main() {
 							{ 
 								used_link_map.insert(link, 1);
 							}
-							curr_y += 1
+							curr_y += 1;
 
 						} else if dst_x > curr_x && dst_y > curr_y // exit S port
 						{
@@ -1150,6 +1149,159 @@ fn main() {
 
 			} else if noc_topology == "sho_mesh"
 			{
+				// get which global NoC is used for routing
+				for j in 0..connection_first_x.len()
+				{
+					let mut curr_x = connection_first_x[j];
+					let mut curr_y = connection_first_y[j];
+					let mut dst_x = connection_second_x[j];
+					let mut dst_y = connection_second_y[j];
+
+					let link = (curr_x, curr_y, "from_L".to_owned(), curr_x, curr_y, "from_L".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
+
+
+					let link = (dst_x, dst_y, "to_L".to_owned(), dst_x, dst_y, "to_L".to_owned());
+					if used_link_map.contains_key(&link)
+					{	
+						let tmp = used_link_map[&link] + 1;
+						used_link_map.insert(link, tmp);
+					} else
+					{ 
+						used_link_map.insert(link, 1);
+					}
+
+
+					while true
+					{
+						if dst_x == curr_x && dst_y == curr_y // exit local port
+						{
+							break;
+						} else if dst_x == curr_x && dst_y < curr_y // exit W port
+						{
+							let link = (curr_x, curr_y, "W".to_owned(), curr_x, curr_y-1, "E".to_owned());
+							if used_link_map.contains_key(&link)
+							{	
+								let tmp = used_link_map[&link] + 1;
+								used_link_map.insert(link, tmp);
+							} else
+							{ 
+								used_link_map.insert(link, 1);
+							}
+							curr_y -= 1;
+
+						} else if dst_x < curr_x && dst_y < curr_y // exit NW port
+						{
+							let link = (curr_x, curr_y, "NW".to_owned(), curr_x-1, curr_y-1, "SE".to_owned());
+							if used_link_map.contains_key(&link)
+							{	
+								let tmp = used_link_map[&link] + 1;
+								used_link_map.insert(link, tmp);
+							} else
+							{ 
+								used_link_map.insert(link, 1);
+							}
+							curr_x -= 1;
+							curr_y -= 1;
+
+						} else if dst_x < curr_x && dst_y == curr_y // exit N port
+						{
+							let link = (curr_x, curr_y, "N".to_owned(), curr_x-1, curr_y, "S".to_owned());
+							if used_link_map.contains_key(&link)
+							{	
+								let tmp = used_link_map[&link] + 1;
+								used_link_map.insert(link, tmp);
+							} else
+							{ 
+								used_link_map.insert(link, 1);
+							}
+							curr_x -= 1;
+
+						} else if dst_x < curr_x && dst_y > curr_y // exit NE port
+						{
+							let link = (curr_x, curr_y, "NE".to_owned(), curr_x-1, curr_y+1, "SW".to_owned());
+							if used_link_map.contains_key(&link)
+							{	
+								let tmp = used_link_map[&link] + 1;
+								used_link_map.insert(link, tmp);
+							} else
+							{ 
+								used_link_map.insert(link, 1);
+							}
+							curr_x -= 1;
+							curr_y += 1;
+
+						} else if dst_x == curr_x && dst_y > curr_y // exit E port
+						{
+							let link = (curr_x, curr_y, "E".to_owned(), curr_x, curr_y+1, "W".to_owned());
+							if used_link_map.contains_key(&link)
+							{	
+								let tmp = used_link_map[&link] + 1;
+								used_link_map.insert(link, tmp);
+							} else
+							{ 
+								used_link_map.insert(link, 1);
+							}
+							curr_y += 1;
+
+						} else if dst_x > curr_x && dst_y > curr_y // exit SE port
+						{
+							let link = (curr_x, curr_y, "SE".to_owned(), curr_x+1, curr_y+1, "NW".to_owned());
+							if used_link_map.contains_key(&link)
+							{	
+								let tmp = used_link_map[&link] + 1;
+								used_link_map.insert(link, tmp);
+							} else
+							{ 
+								used_link_map.insert(link, 1);
+							}
+							curr_x += 1;
+							curr_y += 1;
+
+						} else if dst_x > curr_x && dst_y == curr_y // exit S port
+						{
+							let link = (curr_x, curr_y, "S".to_owned(), curr_x+1, curr_y, "N".to_owned());
+							if used_link_map.contains_key(&link)
+							{	
+								let tmp = used_link_map[&link] + 1;
+								used_link_map.insert(link, tmp);
+							} else
+							{ 
+								used_link_map.insert(link, 1);
+							}
+							curr_x += 1;
+
+						} else if dst_x > curr_x && dst_y < curr_y // exit SW port
+						{
+							let link = (curr_x, curr_y, "SW".to_owned(), curr_x+1, curr_y-1, "NE".to_owned());
+							if used_link_map.contains_key(&link)
+							{	
+								let tmp = used_link_map[&link] + 1;
+								used_link_map.insert(link, tmp);
+							} else
+							{ 
+								used_link_map.insert(link, 1);
+							}
+							curr_x += 1;
+							curr_y -= 1;
+
+						} else
+						{
+							panic!("Wrong!");
+						}
+
+					}
+				}
+
+
+
 
 			} else if noc_topology == "sn_mesh"
 			{
@@ -1419,8 +1571,176 @@ fn main() {
 									router_out_dict.insert("W_out".to_owned(), (router_out_len, tmp));
 									router_out_len += 1;
 								}
+
 							} else if noc_topology == "sho_mesh"
 							{
+								// global links
+								if receiver_map_noc_global.contains_key(&(x-1, y, "S".to_owned(), x, y, "N".to_owned()))
+								{
+									let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+									router_in_stream.push(N_in);
+									
+									let tmp = used_link_map[&(x-1, y, "S".to_owned(), x, y, "N".to_owned())];
+									router_in_dict.insert("N_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+								
+								if receiver_map_noc_global.contains_key(&(x+1, y, "N".to_owned(), x, y, "S".to_owned()))
+								{
+									let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+									router_in_stream.push(S_in);
+
+									let tmp = used_link_map[&(x+1, y, "N".to_owned(), x, y, "S".to_owned())];
+									router_in_dict.insert("S_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+								
+								if receiver_map_noc_global.contains_key(&(x, y+1, "W".to_owned(), x, y, "E".to_owned()))
+								{
+									let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+									router_in_stream.push(E_in);
+
+									let tmp = used_link_map[&(x, y+1, "W".to_owned(), x, y, "E".to_owned())];
+									router_in_dict.insert("E_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+								
+								if receiver_map_noc_global.contains_key(&(x, y-1, "E".to_owned(), x, y, "W".to_owned()))
+								{
+									let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+									router_in_stream.push(W_in);
+
+									let tmp = used_link_map[&(x, y-1, "E".to_owned(), x, y, "W".to_owned())];
+									router_in_dict.insert("W_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+								if receiver_map_noc_global.contains_key(&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned()))
+								{
+									let NE_in = receiver_map_noc_global.remove(&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned())).unwrap();
+									router_in_stream.push(NE_in);
+
+									let tmp = used_link_map[&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned())];
+									router_in_dict.insert("NE_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+								if receiver_map_noc_global.contains_key(&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned()))
+								{
+									let NW_in = receiver_map_noc_global.remove(&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned())).unwrap();
+									router_in_stream.push(NW_in);
+
+									let tmp = used_link_map[&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned())];
+									router_in_dict.insert("NW_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+								if receiver_map_noc_global.contains_key(&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned()))
+								{
+									let SE_in = receiver_map_noc_global.remove(&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned())).unwrap();
+									router_in_stream.push(SE_in);
+
+									let tmp = used_link_map[&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned())];
+									router_in_dict.insert("SE_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+								if receiver_map_noc_global.contains_key(&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned()))
+								{
+									let SW_in = receiver_map_noc_global.remove(&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned())).unwrap();
+									router_in_stream.push(SW_in);
+
+									let tmp = used_link_map[&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned())];
+									router_in_dict.insert("SW_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+
+
+								
+								if sender_map_noc_global.contains_key(&(x, y, "N".to_owned(), x-1, y, "S".to_owned()))
+								{
+									let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+									router_out_stream.push(N_out);
+
+									let tmp = used_link_map[&(x, y, "N".to_owned(), x-1, y, "S".to_owned())];
+									router_out_dict.insert("N_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+								
+								if sender_map_noc_global.contains_key(&(x, y, "S".to_owned(), x+1, y, "N".to_owned()))
+								{
+									let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+									router_out_stream.push(S_out);
+
+									let tmp = used_link_map[&(x, y, "S".to_owned(), x+1, y, "N".to_owned())];
+									router_out_dict.insert("S_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+								
+								if sender_map_noc_global.contains_key(&(x, y, "E".to_owned(), x, y+1, "W".to_owned()))
+								{
+									let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+									router_out_stream.push(E_out);
+
+									let tmp = used_link_map[&(x, y, "E".to_owned(), x, y+1, "W".to_owned())];
+									router_out_dict.insert("E_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+								
+								if sender_map_noc_global.contains_key(&(x, y, "W".to_owned(), x, y-1, "E".to_owned()))
+								{
+									let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();	
+									router_out_stream.push(W_out);
+
+									let tmp = used_link_map[&(x, y, "W".to_owned(), x, y-1, "E".to_owned())];
+									router_out_dict.insert("W_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+								if sender_map_noc_global.contains_key(&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned()))
+								{
+									let NE_out = sender_map_noc_global.remove(&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned())).unwrap();	
+									router_out_stream.push(NE_out);
+
+									let tmp = used_link_map[&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned())];
+									router_out_dict.insert("NE_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+								if sender_map_noc_global.contains_key(&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned()))
+								{
+									let NW_out = sender_map_noc_global.remove(&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned())).unwrap();	
+									router_out_stream.push(NW_out);
+
+									let tmp = used_link_map[&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned())];
+									router_out_dict.insert("NW_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+								if sender_map_noc_global.contains_key(&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned()))
+								{
+									let SE_out = sender_map_noc_global.remove(&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned())).unwrap();	
+									router_out_stream.push(SE_out);
+
+									let tmp = used_link_map[&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned())];
+									router_out_dict.insert("SE_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+								if sender_map_noc_global.contains_key(&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned()))
+								{
+									let SW_out = sender_map_noc_global.remove(&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned())).unwrap();	
+									router_out_stream.push(SW_out);
+
+									let tmp = used_link_map[&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned())];
+									router_out_dict.insert("SW_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+
+
+
 
 							} else if noc_topology == "sn_mesh"
 							{
@@ -1546,7 +1866,8 @@ fn main() {
 									parent.add_child(router_mesh);
 								} else if noc_topology == "sho_mesh"
 								{
-
+									let router_sho_mesh = router_sho_mesh::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+									parent.add_child(router_sho_mesh);
 								} else if noc_topology == "sn_mesh"
 								{
 
@@ -1633,7 +1954,8 @@ fn main() {
 									parent.add_child(router_mesh);
 								} else if noc_topology == "sho_mesh"
 								{
-
+									let router_sho_mesh = router_sho_mesh::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+									parent.add_child(router_sho_mesh);
 								} else if noc_topology == "sn_mesh"
 								{
 
@@ -1760,7 +2082,8 @@ fn main() {
 									parent.add_child(router_mesh);
 								} else if noc_topology == "sho_mesh"
 								{
-
+									let router_sho_mesh = router_sho_mesh::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+									parent.add_child(router_sho_mesh);
 								} else if noc_topology == "sn_mesh"
 								{
 
@@ -1895,7 +2218,170 @@ fn main() {
 								}
 							} else if noc_topology == "sho_mesh"
 							{
+								// global links
+								if receiver_map_noc_global.contains_key(&(x-1, y, "S".to_owned(), x, y, "N".to_owned()))
+								{
+									let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+									router_in_stream.push(N_in);
+									
+									let tmp = used_link_map[&(x-1, y, "S".to_owned(), x, y, "N".to_owned())];
+									router_in_dict.insert("N_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+								
+								if receiver_map_noc_global.contains_key(&(x+1, y, "N".to_owned(), x, y, "S".to_owned()))
+								{
+									let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+									router_in_stream.push(S_in);
 
+									let tmp = used_link_map[&(x+1, y, "N".to_owned(), x, y, "S".to_owned())];
+									router_in_dict.insert("S_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+								
+								if receiver_map_noc_global.contains_key(&(x, y+1, "W".to_owned(), x, y, "E".to_owned()))
+								{
+									let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+									router_in_stream.push(E_in);
+
+									let tmp = used_link_map[&(x, y+1, "W".to_owned(), x, y, "E".to_owned())];
+									router_in_dict.insert("E_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+								
+								if receiver_map_noc_global.contains_key(&(x, y-1, "E".to_owned(), x, y, "W".to_owned()))
+								{
+									let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+									router_in_stream.push(W_in);
+
+									let tmp = used_link_map[&(x, y-1, "E".to_owned(), x, y, "W".to_owned())];
+									router_in_dict.insert("W_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+								if receiver_map_noc_global.contains_key(&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned()))
+								{
+									let NE_in = receiver_map_noc_global.remove(&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned())).unwrap();
+									router_in_stream.push(NE_in);
+
+									let tmp = used_link_map[&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned())];
+									router_in_dict.insert("NE_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+								if receiver_map_noc_global.contains_key(&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned()))
+								{
+									let NW_in = receiver_map_noc_global.remove(&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned())).unwrap();
+									router_in_stream.push(NW_in);
+
+									let tmp = used_link_map[&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned())];
+									router_in_dict.insert("NW_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+								if receiver_map_noc_global.contains_key(&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned()))
+								{
+									let SE_in = receiver_map_noc_global.remove(&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned())).unwrap();
+									router_in_stream.push(SE_in);
+
+									let tmp = used_link_map[&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned())];
+									router_in_dict.insert("SE_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+								if receiver_map_noc_global.contains_key(&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned()))
+								{
+									let SW_in = receiver_map_noc_global.remove(&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned())).unwrap();
+									router_in_stream.push(SW_in);
+
+									let tmp = used_link_map[&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned())];
+									router_in_dict.insert("SW_in".to_owned(), (router_in_len, tmp));
+									router_in_len += 1;
+								}
+
+
+
+								
+								if sender_map_noc_global.contains_key(&(x, y, "N".to_owned(), x-1, y, "S".to_owned()))
+								{
+									let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+									router_out_stream.push(N_out);
+
+									let tmp = used_link_map[&(x, y, "N".to_owned(), x-1, y, "S".to_owned())];
+									router_out_dict.insert("N_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+								
+								if sender_map_noc_global.contains_key(&(x, y, "S".to_owned(), x+1, y, "N".to_owned()))
+								{
+									let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+									router_out_stream.push(S_out);
+
+									let tmp = used_link_map[&(x, y, "S".to_owned(), x+1, y, "N".to_owned())];
+									router_out_dict.insert("S_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+								
+								if sender_map_noc_global.contains_key(&(x, y, "E".to_owned(), x, y+1, "W".to_owned()))
+								{
+									let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+									router_out_stream.push(E_out);
+
+									let tmp = used_link_map[&(x, y, "E".to_owned(), x, y+1, "W".to_owned())];
+									router_out_dict.insert("E_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+								
+								if sender_map_noc_global.contains_key(&(x, y, "W".to_owned(), x, y-1, "E".to_owned()))
+								{
+									let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();	
+									router_out_stream.push(W_out);
+
+									let tmp = used_link_map[&(x, y, "W".to_owned(), x, y-1, "E".to_owned())];
+									router_out_dict.insert("W_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+								if sender_map_noc_global.contains_key(&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned()))
+								{
+									let NE_out = sender_map_noc_global.remove(&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned())).unwrap();	
+									router_out_stream.push(NE_out);
+
+									let tmp = used_link_map[&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned())];
+									router_out_dict.insert("NE_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+								if sender_map_noc_global.contains_key(&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned()))
+								{
+									let NW_out = sender_map_noc_global.remove(&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned())).unwrap();	
+									router_out_stream.push(NW_out);
+
+									let tmp = used_link_map[&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned())];
+									router_out_dict.insert("NW_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+								if sender_map_noc_global.contains_key(&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned()))
+								{
+									let SE_out = sender_map_noc_global.remove(&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned())).unwrap();	
+									router_out_stream.push(SE_out);
+
+									let tmp = used_link_map[&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned())];
+									router_out_dict.insert("SE_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+
+								if sender_map_noc_global.contains_key(&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned()))
+								{
+									let SW_out = sender_map_noc_global.remove(&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned())).unwrap();	
+									router_out_stream.push(SW_out);
+
+									let tmp = used_link_map[&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned())];
+									router_out_dict.insert("SW_out".to_owned(), (router_out_len, tmp));
+									router_out_len += 1;
+								}
+								
 							} else if noc_topology == "sn_mesh"
 							{
 
@@ -2043,7 +2529,8 @@ fn main() {
 									parent.add_child(router_mesh);
 								} else if noc_topology == "sho_mesh"
 								{
-
+									let router_sho_mesh = router_sho_mesh::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+									parent.add_child(router_sho_mesh);
 								} else if noc_topology == "sn_mesh"
 								{
 
@@ -2148,7 +2635,8 @@ fn main() {
 									parent.add_child(router_mesh);
 								} else if noc_topology == "sho_mesh"
 								{
-
+									let router_sho_mesh = router_sho_mesh::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+									parent.add_child(router_sho_mesh);
 								} else if noc_topology == "sn_mesh"
 								{
 
@@ -2291,7 +2779,8 @@ fn main() {
 									parent.add_child(router_mesh);
 								} else if noc_topology == "sho_mesh"
 								{
-
+									let router_sho_mesh = router_sho_mesh::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+									parent.add_child(router_sho_mesh);
 								} else if noc_topology == "sn_mesh"
 								{
 
@@ -2419,7 +2908,170 @@ fn main() {
 					}
 				} else if noc_topology == "sho_mesh"
 				{
+					// global links
+					if receiver_map_noc_global.contains_key(&(x-1, y, "S".to_owned(), x, y, "N".to_owned()))
+					{
+						let N_in = receiver_map_noc_global.remove(&(x-1, y, "S".to_owned(), x, y, "N".to_owned())).unwrap();
+						router_in_stream.push(N_in);
+						
+						let tmp = used_link_map[&(x-1, y, "S".to_owned(), x, y, "N".to_owned())];
+						router_in_dict.insert("N_in".to_owned(), (router_in_len, tmp));
+						router_in_len += 1;
+					}
+					
+					if receiver_map_noc_global.contains_key(&(x+1, y, "N".to_owned(), x, y, "S".to_owned()))
+					{
+						let S_in = receiver_map_noc_global.remove(&(x+1, y, "N".to_owned(), x, y, "S".to_owned())).unwrap();
+						router_in_stream.push(S_in);
 
+						let tmp = used_link_map[&(x+1, y, "N".to_owned(), x, y, "S".to_owned())];
+						router_in_dict.insert("S_in".to_owned(), (router_in_len, tmp));
+						router_in_len += 1;
+					}
+					
+					if receiver_map_noc_global.contains_key(&(x, y+1, "W".to_owned(), x, y, "E".to_owned()))
+					{
+						let E_in = receiver_map_noc_global.remove(&(x, y+1, "W".to_owned(), x, y, "E".to_owned())).unwrap();
+						router_in_stream.push(E_in);
+
+						let tmp = used_link_map[&(x, y+1, "W".to_owned(), x, y, "E".to_owned())];
+						router_in_dict.insert("E_in".to_owned(), (router_in_len, tmp));
+						router_in_len += 1;
+					}
+					
+					if receiver_map_noc_global.contains_key(&(x, y-1, "E".to_owned(), x, y, "W".to_owned()))
+					{
+						let W_in = receiver_map_noc_global.remove(&(x, y-1, "E".to_owned(), x, y, "W".to_owned())).unwrap();
+						router_in_stream.push(W_in);
+
+						let tmp = used_link_map[&(x, y-1, "E".to_owned(), x, y, "W".to_owned())];
+						router_in_dict.insert("W_in".to_owned(), (router_in_len, tmp));
+						router_in_len += 1;
+					}
+
+					if receiver_map_noc_global.contains_key(&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned()))
+					{
+						let NE_in = receiver_map_noc_global.remove(&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned())).unwrap();
+						router_in_stream.push(NE_in);
+
+						let tmp = used_link_map[&(x-1, y+1, "SW".to_owned(), x, y, "NE".to_owned())];
+						router_in_dict.insert("NE_in".to_owned(), (router_in_len, tmp));
+						router_in_len += 1;
+					}
+
+					if receiver_map_noc_global.contains_key(&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned()))
+					{
+						let NW_in = receiver_map_noc_global.remove(&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned())).unwrap();
+						router_in_stream.push(NW_in);
+
+						let tmp = used_link_map[&(x-1, y-1, "SE".to_owned(), x, y, "NW".to_owned())];
+						router_in_dict.insert("NW_in".to_owned(), (router_in_len, tmp));
+						router_in_len += 1;
+					}
+
+					if receiver_map_noc_global.contains_key(&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned()))
+					{
+						let SE_in = receiver_map_noc_global.remove(&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned())).unwrap();
+						router_in_stream.push(SE_in);
+
+						let tmp = used_link_map[&(x+1, y+1, "NW".to_owned(), x, y, "SE".to_owned())];
+						router_in_dict.insert("SE_in".to_owned(), (router_in_len, tmp));
+						router_in_len += 1;
+					}
+
+					if receiver_map_noc_global.contains_key(&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned()))
+					{
+						let SW_in = receiver_map_noc_global.remove(&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned())).unwrap();
+						router_in_stream.push(SW_in);
+
+						let tmp = used_link_map[&(x+1, y-1, "NE".to_owned(), x, y, "SW".to_owned())];
+						router_in_dict.insert("SW_in".to_owned(), (router_in_len, tmp));
+						router_in_len += 1;
+					}
+
+
+
+					
+					if sender_map_noc_global.contains_key(&(x, y, "N".to_owned(), x-1, y, "S".to_owned()))
+					{
+						let N_out = sender_map_noc_global.remove(&(x, y, "N".to_owned(), x-1, y, "S".to_owned())).unwrap();
+						router_out_stream.push(N_out);
+
+						let tmp = used_link_map[&(x, y, "N".to_owned(), x-1, y, "S".to_owned())];
+						router_out_dict.insert("N_out".to_owned(), (router_out_len, tmp));
+						router_out_len += 1;
+					}
+					
+					if sender_map_noc_global.contains_key(&(x, y, "S".to_owned(), x+1, y, "N".to_owned()))
+					{
+						let S_out = sender_map_noc_global.remove(&(x, y, "S".to_owned(), x+1, y, "N".to_owned())).unwrap();
+						router_out_stream.push(S_out);
+
+						let tmp = used_link_map[&(x, y, "S".to_owned(), x+1, y, "N".to_owned())];
+						router_out_dict.insert("S_out".to_owned(), (router_out_len, tmp));
+						router_out_len += 1;
+					}
+					
+					if sender_map_noc_global.contains_key(&(x, y, "E".to_owned(), x, y+1, "W".to_owned()))
+					{
+						let E_out = sender_map_noc_global.remove(&(x, y, "E".to_owned(), x, y+1, "W".to_owned())).unwrap();
+						router_out_stream.push(E_out);
+
+						let tmp = used_link_map[&(x, y, "E".to_owned(), x, y+1, "W".to_owned())];
+						router_out_dict.insert("E_out".to_owned(), (router_out_len, tmp));
+						router_out_len += 1;
+					}
+					
+					if sender_map_noc_global.contains_key(&(x, y, "W".to_owned(), x, y-1, "E".to_owned()))
+					{
+						let W_out = sender_map_noc_global.remove(&(x, y, "W".to_owned(), x, y-1, "E".to_owned())).unwrap();	
+						router_out_stream.push(W_out);
+
+						let tmp = used_link_map[&(x, y, "W".to_owned(), x, y-1, "E".to_owned())];
+						router_out_dict.insert("W_out".to_owned(), (router_out_len, tmp));
+						router_out_len += 1;
+					}
+
+					if sender_map_noc_global.contains_key(&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned()))
+					{
+						let NE_out = sender_map_noc_global.remove(&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned())).unwrap();	
+						router_out_stream.push(NE_out);
+
+						let tmp = used_link_map[&(x, y, "NE".to_owned(), x-1, y+1, "SW".to_owned())];
+						router_out_dict.insert("NE_out".to_owned(), (router_out_len, tmp));
+						router_out_len += 1;
+					}
+
+					if sender_map_noc_global.contains_key(&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned()))
+					{
+						let NW_out = sender_map_noc_global.remove(&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned())).unwrap();	
+						router_out_stream.push(NW_out);
+
+						let tmp = used_link_map[&(x, y, "NW".to_owned(), x-1, y-1, "SE".to_owned())];
+						router_out_dict.insert("NW_out".to_owned(), (router_out_len, tmp));
+						router_out_len += 1;
+					}
+
+					if sender_map_noc_global.contains_key(&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned()))
+					{
+						let SE_out = sender_map_noc_global.remove(&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned())).unwrap();	
+						router_out_stream.push(SE_out);
+
+						let tmp = used_link_map[&(x, y, "SE".to_owned(), x+1, y+1, "NW".to_owned())];
+						router_out_dict.insert("SE_out".to_owned(), (router_out_len, tmp));
+						router_out_len += 1;
+					}
+
+					if sender_map_noc_global.contains_key(&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned()))
+					{
+						let SW_out = sender_map_noc_global.remove(&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned())).unwrap();	
+						router_out_stream.push(SW_out);
+
+						let tmp = used_link_map[&(x, y, "SW".to_owned(), x+1, y-1, "NE".to_owned())];
+						router_out_dict.insert("SW_out".to_owned(), (router_out_len, tmp));
+						router_out_len += 1;
+					}
+					
 				} else if noc_topology == "sn_mesh"
 				{
 
@@ -2444,7 +3096,8 @@ fn main() {
 					parent.add_child(router_mesh);
 				} else if noc_topology == "sho_mesh"
 				{
-
+					let router_sho_mesh = router_sho_mesh::new(router_in_stream, router_in_dict, router_in_len, router_out_stream, router_out_dict, router_out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+					parent.add_child(router_sho_mesh);
 				} else if noc_topology == "sn_mesh"
 				{
 
