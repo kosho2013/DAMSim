@@ -29,7 +29,7 @@ use templates::router_sn_mesh::router_sn_mesh;
 use templates::router_adapter::{from_router_adapter, to_router_adapter};
 
 fn main() {
-	let invalid = 999999;
+	let invalid = usize::MAX;
 	let dummy = 1;
 
 	let args: Vec<String> = env::args().collect();

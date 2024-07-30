@@ -2,7 +2,7 @@ num_chip: 1
 accelerator {
 	x_dim: 8
 	y_dim: 8
-	noc_topology: "mesh"
+	noc_topology: "sho_mesh"
 	num_compute_tile: 32
 	num_memory_tile: 32
 	lane_dim: 32
