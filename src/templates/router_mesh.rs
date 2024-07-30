@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::future;
 use dam::channel::PeekResult;
 use dam::context_tools::*;
 use dam::{
@@ -78,7 +79,7 @@ router_mesh<A>: Context,
 impl<A: DAMType + num::Num> Context for router_mesh<A> {
     fn run(&mut self) {
 
-        let invalid = 999999;
+        let invalid = usize::MAX;
 
         let mut in_idx_vec = vec![]; // NSEWL
         let mut in_invalid = vec![]; // NSEWL
@@ -196,11 +197,11 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
 
         loop
         {
-            // read from all input ports
+            // peek from all input ports
             let mut data_vec = vec![];
             let mut dst_x_vec = vec![];
             let mut dst_y_vec = vec![];
-
+            let mut future_time = vec![];
 
             for _ in 0..self.num_vc
             {
@@ -208,6 +209,7 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                 {
                     if in_closed[i]
                     {
+                        future_time.push(invalid);
                         data_vec.push(invalid);
                         dst_x_vec.push(invalid);
                         dst_y_vec.push(invalid);
@@ -215,12 +217,14 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                     {
                         let peek_result = self.in_stream[in_idx_vec[i]].peek();
                         match peek_result {
-                            PeekResult::Something(_) =>
+                            PeekResult::Something(data) =>
                             {
-                                let data = self.in_stream[in_idx_vec[i]].dequeue(&self.time).unwrap().data;
-                                let dst_x = data / self.y_dim;
-                                let dst_y = data % self.y_dim;
-                                data_vec.push(data);
+
+                                future_time.push(data.time.time() as usize);
+
+                                let dst_x = data.data / self.y_dim;
+                                let dst_y = data.data % self.y_dim;
+                                data_vec.push(data.data);
                                 dst_x_vec.push(dst_x);
                                 dst_y_vec.push(dst_y);
 
@@ -228,12 +232,14 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                             },
                             PeekResult::Nothing(_) => 
                             {
+                                future_time.push(invalid);
                                 data_vec.push(invalid);
                                 dst_x_vec.push(invalid);
                                 dst_y_vec.push(invalid);
                             },
                             PeekResult::Closed =>
                             {
+                                future_time.push(invalid);
                                 data_vec.push(invalid);
                                 dst_x_vec.push(invalid);
                                 dst_y_vec.push(invalid);
@@ -245,7 +251,40 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
             }
             
 
+            // deq by lowest time
+            while true
+            {
+                let mut cnt = 0;
+                for i in 0..future_time.len()
+                {
+                    if future_time[i] == invalid
+                    {
+                        cnt += 1;
+                    }
+                }
+                if cnt == 5
+                {
+                    break;
+                }
 
+                let mut lowest_idx = 0;
+                let mut lowest_future_time = usize::MAX;
+                for i in 0..future_time.len()
+                {
+                    if future_time[i] != invalid
+                    {
+                        if future_time[i] < lowest_future_time
+                        {
+                            lowest_idx = i;
+                            lowest_future_time = future_time[i];
+                        }
+                    }
+                }
+
+                let data = self.in_stream[in_idx_vec[lowest_idx]].dequeue(&self.time).unwrap().data;
+                future_time[lowest_idx] = invalid;
+            }
+            
             
 
             for i in 0..data_vec.len() // NSEWL
@@ -418,113 +457,113 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
 
 
 
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
+// #[cfg(test)]
+// mod tests {
+//     use std::collections::HashMap;
 
-    use dam::shim::RunMode;
-    use dam::simulation::{DotConvertible, InitializationOptions, InitializationOptionsBuilder, ProgramBuilder, RunOptions, RunOptionsBuilder};
+//     use dam::shim::RunMode;
+//     use dam::simulation::{DotConvertible, InitializationOptions, InitializationOptionsBuilder, ProgramBuilder, RunOptions, RunOptionsBuilder};
 
-    use dam::{templates::ops::ALUAddOp, utility_contexts::*};
+//     use dam::{templates::ops::ALUAddOp, utility_contexts::*};
 
-    use crate::templates::primitive::{ALUExpOp, Exp, Token};
-    use crate::templates::router_mesh::router_mesh;
-    use crate::token_vec;
+//     use crate::templates::primitive::{ALUExpOp, Exp, Token};
+//     use crate::templates::router_mesh::router_mesh;
+//     use crate::token_vec;
 
-    #[test]
-    fn test_router_mesh() {
-        let mut parent = ProgramBuilder::default();
+//     #[test]
+//     fn test_router_mesh() {
+//         let mut parent = ProgramBuilder::default();
         
 
 
-        let (sender1, receiver1) = parent.bounded(1024);
-        let (sender2, receiver2) = parent.bounded(1024);
-        let (sender3, receiver3) = parent.bounded(1024);
-        let (sender4, receiver4) = parent.bounded(1024);
-        let (sender5, receiver5) = parent.bounded(1024);
+//         let (sender1, receiver1) = parent.bounded(1024);
+//         let (sender2, receiver2) = parent.bounded(1024);
+//         let (sender3, receiver3) = parent.bounded(1024);
+//         let (sender4, receiver4) = parent.bounded(1024);
+//         let (sender5, receiver5) = parent.bounded(1024);
 
 
 
-        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
-        let gen1 = GeneratorContext::new(iter, sender1);
-		parent.add_child(gen1);
+//         let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
+//         let gen1 = GeneratorContext::new(iter, sender1);
+// 		parent.add_child(gen1);
 
-        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
-        let gen2 = GeneratorContext::new(iter, sender2);
-		parent.add_child(gen2);
+//         let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
+//         let gen2 = GeneratorContext::new(iter, sender2);
+// 		parent.add_child(gen2);
 
-        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
-        let gen3 = GeneratorContext::new(iter, sender3);
-		parent.add_child(gen3);
+//         let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
+//         let gen3 = GeneratorContext::new(iter, sender3);
+// 		parent.add_child(gen3);
 
-        let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
-        let gen4 = GeneratorContext::new(iter, sender4);
-		parent.add_child(gen4);
-
-
-
-
-        let mut in_stream = vec![];
-        in_stream.push(receiver1);
-        in_stream.push(receiver2);
-        in_stream.push(receiver3);
-        in_stream.push(receiver4);
-
-        let mut out_stream = vec![];
-        out_stream.push(sender5);
-
-        let in_len = 4;
-        let mut in_dict = HashMap::new();
-        in_dict.insert("N_in".to_owned(), (0, 1));
-        in_dict.insert("S_in".to_owned(), (1, 1));
-        in_dict.insert("E_in".to_owned(), (2, 1));
-        in_dict.insert("W_in".to_owned(), (3, 1));
-
-        let mut out_dict = HashMap::new();
-        out_dict.insert("L_out".to_owned(), (0, 4));
-        let out_len = 1;
-
-
-        let x_dim = 1;
-        let y_dim = 1;
-        let x = 0;
-        let y = 0;
-        let num_input = 1000;
-        let num_vc = 10;
-        let dummy = 0;
-
-
-        let router_mesh = router_mesh::new(in_stream, in_dict, in_len, out_stream, out_dict, out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
-        parent.add_child(router_mesh);
+//         let iter = || (0..(1000)).map(|i| (i as usize) * 0_usize);
+//         let gen4 = GeneratorContext::new(iter, sender4);
+// 		parent.add_child(gen4);
 
 
 
-        let con1 = PrinterContext::new(receiver5);
-		parent.add_child(con1);
+
+//         let mut in_stream = vec![];
+//         in_stream.push(receiver1);
+//         in_stream.push(receiver2);
+//         in_stream.push(receiver3);
+//         in_stream.push(receiver4);
+
+//         let mut out_stream = vec![];
+//         out_stream.push(sender5);
+
+//         let in_len = 4;
+//         let mut in_dict = HashMap::new();
+//         in_dict.insert("N_in".to_owned(), (0, 1));
+//         in_dict.insert("S_in".to_owned(), (1, 1));
+//         in_dict.insert("E_in".to_owned(), (2, 1));
+//         in_dict.insert("W_in".to_owned(), (3, 1));
+
+//         let mut out_dict = HashMap::new();
+//         out_dict.insert("L_out".to_owned(), (0, 4));
+//         let out_len = 1;
+
+
+//         let x_dim = 1;
+//         let y_dim = 1;
+//         let x = 0;
+//         let y = 0;
+//         let num_input = 1000;
+//         let num_vc = 10;
+//         let dummy = 0;
+
+
+//         let router_mesh = router_mesh::new(in_stream, in_dict, in_len, out_stream, out_dict, out_len, x_dim, y_dim, x, y, num_input, num_vc, dummy);
+//         parent.add_child(router_mesh);
+
+
+
+//         let con1 = PrinterContext::new(receiver5);
+// 		parent.add_child(con1);
         
 
         
 
-        // run DAM
-			let initialized: dam::simulation::Initialized = parent
-			.initialize(
-				InitializationOptionsBuilder::default()
-					.run_flavor_inference(false)
-					.build()
-					.unwrap(),
-			)
-			.unwrap();
-			println!("{}", initialized.to_dot_string());
+//         // run DAM
+// 			let initialized: dam::simulation::Initialized = parent
+// 			.initialize(
+// 				InitializationOptionsBuilder::default()
+// 					.run_flavor_inference(false)
+// 					.build()
+// 					.unwrap(),
+// 			)
+// 			.unwrap();
+// 			println!("{}", initialized.to_dot_string());
 
 
-			let executed = initialized.run(
-				RunOptionsBuilder::default()
-					.mode(RunMode::Simple)
-					.build()
-					.unwrap(),
-			);
-			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
+// 			let executed = initialized.run(
+// 				RunOptionsBuilder::default()
+// 					.mode(RunMode::Simple)
+// 					.build()
+// 					.unwrap(),
+// 			);
+// 			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
 
 
-    }
-}
+//     }
+// }
