@@ -60,6 +60,8 @@ simd_pcu_adapter_upstream<A>: Context,
 impl<A: DAMType + num::Num> Context for simd_pcu_adapter_upstream<A> {
     fn run(&mut self) {
         let tmp = self.m * self.k * self.n;
+        
+        let curr_time = self.time.tick();
         for _ in 0..self.num_input {
             let mut in_vec = vec![];
 
@@ -73,7 +75,6 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_upstream<A> {
 
             for _ in 0..tmp
             {
-                let curr_time = self.time.tick();
                 self.out_stream.enqueue(&self.time, ChannelElement::new(curr_time, in_data.clone())).unwrap();
             }
         }
@@ -157,6 +158,8 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_downstream<A> {
     fn run(&mut self) {
         let tmp = self.m * self.k * self.n * self.num_input;
         let tmp2 = self.m * self.k * self.n;
+        
+        let curr_time = self.time.tick();
         for i in 0..tmp
         {
             let in_data = self.in_stream.dequeue(&self.time).unwrap().data;
@@ -165,7 +168,6 @@ impl<A: DAMType + num::Num> Context for simd_pcu_adapter_downstream<A> {
             {
                 for j in 0..self.out_len
                 {
-                    let curr_time = self.time.tick();
                     let idx: usize = j.try_into().unwrap();
                     self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time, self.out_dst[j])).unwrap();
                 }
@@ -249,6 +251,8 @@ systolic_pcu_adapter_upstream<A>: Context,
 impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_upstream<A> {
     fn run(&mut self) {
         let tmp_inner = self.m * (self.k) * self.n;
+        
+        let curr_time = self.time.tick();
         for _ in 0..self.num_input {
             let mut in_vec = vec![];
 
@@ -262,7 +266,6 @@ impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_upstream<A> {
 
             for i in 0..tmp_inner
             {
-                let curr_time = self.time.tick();
                 self.out_stream_lane.enqueue(&self.time, ChannelElement::new(curr_time, in_data.clone())).unwrap();
                 self.out_stream_stage.enqueue(&self.time, ChannelElement::new(curr_time, in_data.clone())).unwrap();
             }
@@ -343,6 +346,8 @@ impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_downstream<A> {
     fn run(&mut self) {
         let tmp_outer = self.m * self.k * self.n * self.num_input;
         let tmp_inner = self.m * self.k * self.n;
+        
+        let curr_time = self.time.tick();
         for i in 0..tmp_outer
         {
             let in_lane = self.in_stream_lane.dequeue(&self.time);
@@ -351,7 +356,6 @@ impl<A: DAMType + num::Num> Context for systolic_pcu_adapter_downstream<A> {
             {
                 for j in 0..self.out_len
                 {
-                    let curr_time = self.time.tick();
                     let idx: usize = j.try_into().unwrap();
                     self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time, self.out_dst[j])).unwrap();
                 }

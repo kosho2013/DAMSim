@@ -54,7 +54,7 @@ pmu_adapter_upstream<A>: Context,
 
 impl<A: DAMType + num::Num> Context for pmu_adapter_upstream<A> {
     fn run(&mut self) {
-        let mut cnt: usize = 0;
+        let curr_time = self.time.tick();
         for _ in 0..self.num_input {
             let mut in_vec = vec![];
 
@@ -68,10 +68,8 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_upstream<A> {
 
             for _ in 0..self.counter
             {
-                let curr_time = self.time.tick();
                 self.out_stream_wr_addr.enqueue(&self.time, ChannelElement::new(curr_time, 0)).unwrap();
                 self.out_stream_wr_data.enqueue(&self.time, ChannelElement::new(curr_time, in_data.clone())).unwrap();
-                cnt += 1;
             }
         }
         self.time.incr_cycles(1);
@@ -133,6 +131,8 @@ pmu_adapter_downstream<A>: Context,
 impl<A: DAMType + num::Num> Context for pmu_adapter_downstream<A> {
     fn run(&mut self) {
         let tmp = self.counter * self.num_input; 
+        
+        let curr_time = self.time.tick();
         for i in 0..tmp
         {
             let in_data = self.in_stream.dequeue(&self.time).unwrap().data;
@@ -141,7 +141,6 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_downstream<A> {
             {
                 for j in 0..self.out_len
                 {
-                    let curr_time = self.time.tick();
                     let idx: usize = j.try_into().unwrap();
                     self.out_stream[idx].enqueue(&self.time, ChannelElement::new(curr_time, self.out_dst[j])).unwrap();
                 }
@@ -150,11 +149,3 @@ impl<A: DAMType + num::Num> Context for pmu_adapter_downstream<A> {
         self.time.incr_cycles(1);
     }
 }
-
-
-
-
-
-
-
-
