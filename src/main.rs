@@ -932,6 +932,7 @@ fn main() {
 
 		
 			// run DAM
+
 			let initialized: dam::simulation::Initialized = parent
 			.initialize(
 				InitializationOptionsBuilder::default()
@@ -943,6 +944,7 @@ fn main() {
 			println!("{}", initialized.to_dot_string());
 
 
+			let start = Instant::now();
 			let executed = initialized.run(
 				RunOptionsBuilder::default()
 					.mode(RunMode::Simple)
@@ -950,6 +952,10 @@ fn main() {
 					.unwrap(),
 			);
 			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
+			let duration = start.elapsed();
+			let seconds = duration.as_secs_f32();
+			println!("Runtime (s): {}", seconds);
+
 
 			let tmp: u64 = executed.elapsed_cycles().unwrap();
 			let tmp: f32 = tmp as f32 / num_input as f32 / freq as f32;
@@ -3120,6 +3126,7 @@ fn main() {
 			println!("{}", initialized.to_dot_string());
 
 
+			let start = Instant::now();
 			let executed = initialized.run(
 				RunOptionsBuilder::default()
 					.mode(RunMode::Simple)
@@ -3127,6 +3134,9 @@ fn main() {
 					.unwrap(),
 			);
 			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
+			let duration = start.elapsed();
+			let seconds = duration.as_secs_f32();
+			println!("Runtime (s): {}", seconds);
 
 			let tmp: u64 = executed.elapsed_cycles().unwrap();
 			let tmp: f32 = tmp as f32 / num_input as f32 / freq as f32;

@@ -1,0 +1,596 @@
+Compute_Latency [6.4]
+Memory_Latency [0.0]
+Network_Latency [0.0]
+num_tile 32
+num_input 32
+num_config 1
+config: 0
+kernel_latency[8, 8]
+pcu_x[0, 0, 0, 0, 1, 1, 1, 1, 2, 2]
+pcu_y[1, 3, 5, 7, 0, 2, 4, 6, 1, 3]
+pcu_counter [8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
+pcu_sender_vec [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15], [16, 17, 18, 19], [20, 21, 22, 23], [24, 25, 26, 27], [28, 29, 30, 31], [999999], [999999]]
+pcu_receiver_vec [[999999], [999999], [999999], [999999], [999999], [999999], [999999], [999999], [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47], [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63]]
+pcu_SIMD_or_Systolic ["SIMD", "SIMD", "SIMD", "SIMD", "SIMD", "SIMD", "SIMD", "SIMD", "SIMD", "SIMD"]
+pcu_M [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+pcu_K [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+pcu_N [8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
+pmu_x[0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7]
+pmu_y[0, 2, 4, 6, 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7]
+pmu_counter [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
+pmu_sender_vec [[32], [33], [34], [35], [36], [37], [38], [39], [40], [41], [42], [43], [44], [45], [46], [47], [48], [49], [50], [51], [52], [53], [54], [55], [56], [57], [58], [59], [60], [61], [62], [63]]
+pmu_receiver_vec [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20], [21], [22], [23], [24], [25], [26], [27], [28], [29], [30], [31]]
+num_of_connections 64
+
+
+
+
+
+experiment 1, perfect NoC ***************************************************************************************
+digraph ProgramGraph {
+    Node_0[shape="rectangle",label="GeneratorContext(ID_0)"]
+    Node_1[shape="rectangle",label="simd_pcu_adapter_upstream(ID_1)"]
+    Node_2[shape="rectangle",label="PCU(ID_2)"]
+    Node_3[shape="rectangle",label="simd_pcu_adapter_downstream(ID_3)"]
+    Node_4[shape="rectangle",label="GeneratorContext(ID_4)"]
+    Node_5[shape="rectangle",label="simd_pcu_adapter_upstream(ID_5)"]
+    Node_6[shape="rectangle",label="PCU(ID_6)"]
+    Node_7[shape="rectangle",label="simd_pcu_adapter_downstream(ID_7)"]
+    Node_8[shape="rectangle",label="GeneratorContext(ID_8)"]
+    Node_9[shape="rectangle",label="simd_pcu_adapter_upstream(ID_9)"]
+    Node_10[shape="rectangle",label="PCU(ID_10)"]
+    Node_11[shape="rectangle",label="simd_pcu_adapter_downstream(ID_11)"]
+    Node_12[shape="rectangle",label="GeneratorContext(ID_12)"]
+    Node_13[shape="rectangle",label="simd_pcu_adapter_upstream(ID_13)"]
+    Node_14[shape="rectangle",label="PCU(ID_14)"]
+    Node_15[shape="rectangle",label="simd_pcu_adapter_downstream(ID_15)"]
+    Node_16[shape="rectangle",label="GeneratorContext(ID_16)"]
+    Node_17[shape="rectangle",label="simd_pcu_adapter_upstream(ID_17)"]
+    Node_18[shape="rectangle",label="PCU(ID_18)"]
+    Node_19[shape="rectangle",label="simd_pcu_adapter_downstream(ID_19)"]
+    Node_20[shape="rectangle",label="GeneratorContext(ID_20)"]
+    Node_21[shape="rectangle",label="simd_pcu_adapter_upstream(ID_21)"]
+    Node_22[shape="rectangle",label="PCU(ID_22)"]
+    Node_23[shape="rectangle",label="simd_pcu_adapter_downstream(ID_23)"]
+    Node_24[shape="rectangle",label="GeneratorContext(ID_24)"]
+    Node_25[shape="rectangle",label="simd_pcu_adapter_upstream(ID_25)"]
+    Node_26[shape="rectangle",label="PCU(ID_26)"]
+    Node_27[shape="rectangle",label="simd_pcu_adapter_downstream(ID_27)"]
+    Node_28[shape="rectangle",label="GeneratorContext(ID_28)"]
+    Node_29[shape="rectangle",label="simd_pcu_adapter_upstream(ID_29)"]
+    Node_30[shape="rectangle",label="PCU(ID_30)"]
+    Node_31[shape="rectangle",label="simd_pcu_adapter_downstream(ID_31)"]
+    Node_32[shape="rectangle",label="simd_pcu_adapter_upstream(ID_32)"]
+    Node_33[shape="rectangle",label="PCU(ID_33)"]
+    Node_34[shape="rectangle",label="simd_pcu_adapter_downstream(ID_34)"]
+    Node_35[shape="rectangle",label="ConsumerContext(ID_35)"]
+    Node_36[shape="rectangle",label="simd_pcu_adapter_upstream(ID_36)"]
+    Node_37[shape="rectangle",label="PCU(ID_37)"]
+    Node_38[shape="rectangle",label="simd_pcu_adapter_downstream(ID_38)"]
+    Node_39[shape="rectangle",label="ConsumerContext(ID_39)"]
+    Node_40[shape="rectangle",label="pmu_adapter_upstream(ID_40)"]
+    subgraph cluster_Node_43 {
+        label="PMU(ID_43)"
+        Node_42[shape="rectangle",label="WritePipeline(ID_42)"]
+        Node_41[shape="rectangle",label="ReadPipeline(ID_41)"]
+    }
+    Node_44[shape="rectangle",label="FunctionContext(ID_44)"]
+    Node_45[shape="rectangle",label="pmu_adapter_downstream(ID_45)"]
+    Node_46[shape="rectangle",label="pmu_adapter_upstream(ID_46)"]
+    subgraph cluster_Node_49 {
+        label="PMU(ID_49)"
+        Node_47[shape="rectangle",label="ReadPipeline(ID_47)"]
+        Node_48[shape="rectangle",label="WritePipeline(ID_48)"]
+    }
+    Node_50[shape="rectangle",label="FunctionContext(ID_50)"]
+    Node_51[shape="rectangle",label="pmu_adapter_downstream(ID_51)"]
+    Node_52[shape="rectangle",label="pmu_adapter_upstream(ID_52)"]
+    subgraph cluster_Node_55 {
+        label="PMU(ID_55)"
+        Node_54[shape="rectangle",label="WritePipeline(ID_54)"]
+        Node_53[shape="rectangle",label="ReadPipeline(ID_53)"]
+    }
+    Node_56[shape="rectangle",label="FunctionContext(ID_56)"]
+    Node_57[shape="rectangle",label="pmu_adapter_downstream(ID_57)"]
+    Node_58[shape="rectangle",label="pmu_adapter_upstream(ID_58)"]
+    subgraph cluster_Node_61 {
+        label="PMU(ID_61)"
+        Node_59[shape="rectangle",label="ReadPipeline(ID_59)"]
+        Node_60[shape="rectangle",label="WritePipeline(ID_60)"]
+    }
+    Node_62[shape="rectangle",label="FunctionContext(ID_62)"]
+    Node_63[shape="rectangle",label="pmu_adapter_downstream(ID_63)"]
+    Node_64[shape="rectangle",label="pmu_adapter_upstream(ID_64)"]
+    subgraph cluster_Node_67 {
+        label="PMU(ID_67)"
+        Node_66[shape="rectangle",label="WritePipeline(ID_66)"]
+        Node_65[shape="rectangle",label="ReadPipeline(ID_65)"]
+    }
+    Node_68[shape="rectangle",label="FunctionContext(ID_68)"]
+    Node_69[shape="rectangle",label="pmu_adapter_downstream(ID_69)"]
+    Node_70[shape="rectangle",label="pmu_adapter_upstream(ID_70)"]
+    subgraph cluster_Node_73 {
+        label="PMU(ID_73)"
+        Node_72[shape="rectangle",label="WritePipeline(ID_72)"]
+        Node_71[shape="rectangle",label="ReadPipeline(ID_71)"]
+    }
+    Node_74[shape="rectangle",label="FunctionContext(ID_74)"]
+    Node_75[shape="rectangle",label="pmu_adapter_downstream(ID_75)"]
+    Node_76[shape="rectangle",label="pmu_adapter_upstream(ID_76)"]
+    subgraph cluster_Node_79 {
+        label="PMU(ID_79)"
+        Node_78[shape="rectangle",label="WritePipeline(ID_78)"]
+        Node_77[shape="rectangle",label="ReadPipeline(ID_77)"]
+    }
+    Node_80[shape="rectangle",label="FunctionContext(ID_80)"]
+    Node_81[shape="rectangle",label="pmu_adapter_downstream(ID_81)"]
+    Node_82[shape="rectangle",label="pmu_adapter_upstream(ID_82)"]
+    subgraph cluster_Node_85 {
+        label="PMU(ID_85)"
+        Node_83[shape="rectangle",label="ReadPipeline(ID_83)"]
+        Node_84[shape="rectangle",label="WritePipeline(ID_84)"]
+    }
+    Node_86[shape="rectangle",label="FunctionContext(ID_86)"]
+    Node_87[shape="rectangle",label="pmu_adapter_downstream(ID_87)"]
+    Node_88[shape="rectangle",label="pmu_adapter_upstream(ID_88)"]
+    subgraph cluster_Node_91 {
+        label="PMU(ID_91)"
+        Node_90[shape="rectangle",label="WritePipeline(ID_90)"]
+        Node_89[shape="rectangle",label="ReadPipeline(ID_89)"]
+    }
+    Node_92[shape="rectangle",label="FunctionContext(ID_92)"]
+    Node_93[shape="rectangle",label="pmu_adapter_downstream(ID_93)"]
+    Node_94[shape="rectangle",label="pmu_adapter_upstream(ID_94)"]
+    subgraph cluster_Node_97 {
+        label="PMU(ID_97)"
+        Node_95[shape="rectangle",label="ReadPipeline(ID_95)"]
+        Node_96[shape="rectangle",label="WritePipeline(ID_96)"]
+    }
+    Node_98[shape="rectangle",label="FunctionContext(ID_98)"]
+    Node_99[shape="rectangle",label="pmu_adapter_downstream(ID_99)"]
+    Node_100[shape="rectangle",label="pmu_adapter_upstream(ID_100)"]
+    subgraph cluster_Node_103 {
+        label="PMU(ID_103)"
+        Node_101[shape="rectangle",label="ReadPipeline(ID_101)"]
+        Node_102[shape="rectangle",label="WritePipeline(ID_102)"]
+    }
+    Node_104[shape="rectangle",label="FunctionContext(ID_104)"]
+    Node_105[shape="rectangle",label="pmu_adapter_downstream(ID_105)"]
+    Node_106[shape="rectangle",label="pmu_adapter_upstream(ID_106)"]
+    subgraph cluster_Node_109 {
+        label="PMU(ID_109)"
+        Node_107[shape="rectangle",label="ReadPipeline(ID_107)"]
+        Node_108[shape="rectangle",label="WritePipeline(ID_108)"]
+    }
+    Node_110[shape="rectangle",label="FunctionContext(ID_110)"]
+    Node_111[shape="rectangle",label="pmu_adapter_downstream(ID_111)"]
+    Node_112[shape="rectangle",label="pmu_adapter_upstream(ID_112)"]
+    subgraph cluster_Node_115 {
+        label="PMU(ID_115)"
+        Node_113[shape="rectangle",label="ReadPipeline(ID_113)"]
+        Node_114[shape="rectangle",label="WritePipeline(ID_114)"]
+    }
+    Node_116[shape="rectangle",label="FunctionContext(ID_116)"]
+    Node_117[shape="rectangle",label="pmu_adapter_downstream(ID_117)"]
+    Node_118[shape="rectangle",label="pmu_adapter_upstream(ID_118)"]
+    subgraph cluster_Node_121 {
+        label="PMU(ID_121)"
+        Node_120[shape="rectangle",label="WritePipeline(ID_120)"]
+        Node_119[shape="rectangle",label="ReadPipeline(ID_119)"]
+    }
+    Node_122[shape="rectangle",label="FunctionContext(ID_122)"]
+    Node_123[shape="rectangle",label="pmu_adapter_downstream(ID_123)"]
+    Node_124[shape="rectangle",label="pmu_adapter_upstream(ID_124)"]
+    subgraph cluster_Node_127 {
+        label="PMU(ID_127)"
+        Node_126[shape="rectangle",label="WritePipeline(ID_126)"]
+        Node_125[shape="rectangle",label="ReadPipeline(ID_125)"]
+    }
+    Node_128[shape="rectangle",label="FunctionContext(ID_128)"]
+    Node_129[shape="rectangle",label="pmu_adapter_downstream(ID_129)"]
+    Node_130[shape="rectangle",label="pmu_adapter_upstream(ID_130)"]
+    subgraph cluster_Node_133 {
+        label="PMU(ID_133)"
+        Node_132[shape="rectangle",label="WritePipeline(ID_132)"]
+        Node_131[shape="rectangle",label="ReadPipeline(ID_131)"]
+    }
+    Node_134[shape="rectangle",label="FunctionContext(ID_134)"]
+    Node_135[shape="rectangle",label="pmu_adapter_downstream(ID_135)"]
+    Node_136[shape="rectangle",label="pmu_adapter_upstream(ID_136)"]
+    subgraph cluster_Node_139 {
+        label="PMU(ID_139)"
+        Node_137[shape="rectangle",label="ReadPipeline(ID_137)"]
+        Node_138[shape="rectangle",label="WritePipeline(ID_138)"]
+    }
+    Node_140[shape="rectangle",label="FunctionContext(ID_140)"]
+    Node_141[shape="rectangle",label="pmu_adapter_downstream(ID_141)"]
+    Node_142[shape="rectangle",label="pmu_adapter_upstream(ID_142)"]
+    subgraph cluster_Node_145 {
+        label="PMU(ID_145)"
+        Node_143[shape="rectangle",label="ReadPipeline(ID_143)"]
+        Node_144[shape="rectangle",label="WritePipeline(ID_144)"]
+    }
+    Node_146[shape="rectangle",label="FunctionContext(ID_146)"]
+    Node_147[shape="rectangle",label="pmu_adapter_downstream(ID_147)"]
+    Node_148[shape="rectangle",label="pmu_adapter_upstream(ID_148)"]
+    subgraph cluster_Node_151 {
+        label="PMU(ID_151)"
+        Node_149[shape="rectangle",label="ReadPipeline(ID_149)"]
+        Node_150[shape="rectangle",label="WritePipeline(ID_150)"]
+    }
+    Node_152[shape="rectangle",label="FunctionContext(ID_152)"]
+    Node_153[shape="rectangle",label="pmu_adapter_downstream(ID_153)"]
+    Node_154[shape="rectangle",label="pmu_adapter_upstream(ID_154)"]
+    subgraph cluster_Node_157 {
+        label="PMU(ID_157)"
+        Node_156[shape="rectangle",label="WritePipeline(ID_156)"]
+        Node_155[shape="rectangle",label="ReadPipeline(ID_155)"]
+    }
+    Node_158[shape="rectangle",label="FunctionContext(ID_158)"]
+    Node_159[shape="rectangle",label="pmu_adapter_downstream(ID_159)"]
+    Node_160[shape="rectangle",label="pmu_adapter_upstream(ID_160)"]
+    subgraph cluster_Node_163 {
+        label="PMU(ID_163)"
+        Node_161[shape="rectangle",label="ReadPipeline(ID_161)"]
+        Node_162[shape="rectangle",label="WritePipeline(ID_162)"]
+    }
+    Node_164[shape="rectangle",label="FunctionContext(ID_164)"]
+    Node_165[shape="rectangle",label="pmu_adapter_downstream(ID_165)"]
+    Node_166[shape="rectangle",label="pmu_adapter_upstream(ID_166)"]
+    subgraph cluster_Node_169 {
+        label="PMU(ID_169)"
+        Node_168[shape="rectangle",label="WritePipeline(ID_168)"]
+        Node_167[shape="rectangle",label="ReadPipeline(ID_167)"]
+    }
+    Node_170[shape="rectangle",label="FunctionContext(ID_170)"]
+    Node_171[shape="rectangle",label="pmu_adapter_downstream(ID_171)"]
+    Node_172[shape="rectangle",label="pmu_adapter_upstream(ID_172)"]
+    subgraph cluster_Node_175 {
+        label="PMU(ID_175)"
+        Node_173[shape="rectangle",label="ReadPipeline(ID_173)"]
+        Node_174[shape="rectangle",label="WritePipeline(ID_174)"]
+    }
+    Node_176[shape="rectangle",label="FunctionContext(ID_176)"]
+    Node_177[shape="rectangle",label="pmu_adapter_downstream(ID_177)"]
+    Node_178[shape="rectangle",label="pmu_adapter_upstream(ID_178)"]
+    subgraph cluster_Node_181 {
+        label="PMU(ID_181)"
+        Node_180[shape="rectangle",label="WritePipeline(ID_180)"]
+        Node_179[shape="rectangle",label="ReadPipeline(ID_179)"]
+    }
+    Node_182[shape="rectangle",label="FunctionContext(ID_182)"]
+    Node_183[shape="rectangle",label="pmu_adapter_downstream(ID_183)"]
+    Node_184[shape="rectangle",label="pmu_adapter_upstream(ID_184)"]
+    subgraph cluster_Node_187 {
+        label="PMU(ID_187)"
+        Node_185[shape="rectangle",label="ReadPipeline(ID_185)"]
+        Node_186[shape="rectangle",label="WritePipeline(ID_186)"]
+    }
+    Node_188[shape="rectangle",label="FunctionContext(ID_188)"]
+    Node_189[shape="rectangle",label="pmu_adapter_downstream(ID_189)"]
+    Node_190[shape="rectangle",label="pmu_adapter_upstream(ID_190)"]
+    subgraph cluster_Node_193 {
+        label="PMU(ID_193)"
+        Node_191[shape="rectangle",label="ReadPipeline(ID_191)"]
+        Node_192[shape="rectangle",label="WritePipeline(ID_192)"]
+    }
+    Node_194[shape="rectangle",label="FunctionContext(ID_194)"]
+    Node_195[shape="rectangle",label="pmu_adapter_downstream(ID_195)"]
+    Node_196[shape="rectangle",label="pmu_adapter_upstream(ID_196)"]
+    subgraph cluster_Node_199 {
+        label="PMU(ID_199)"
+        Node_198[shape="rectangle",label="WritePipeline(ID_198)"]
+        Node_197[shape="rectangle",label="ReadPipeline(ID_197)"]
+    }
+    Node_200[shape="rectangle",label="FunctionContext(ID_200)"]
+    Node_201[shape="rectangle",label="pmu_adapter_downstream(ID_201)"]
+    Node_202[shape="rectangle",label="pmu_adapter_upstream(ID_202)"]
+    subgraph cluster_Node_205 {
+        label="PMU(ID_205)"
+        Node_203[shape="rectangle",label="ReadPipeline(ID_203)"]
+        Node_204[shape="rectangle",label="WritePipeline(ID_204)"]
+    }
+    Node_206[shape="rectangle",label="FunctionContext(ID_206)"]
+    Node_207[shape="rectangle",label="pmu_adapter_downstream(ID_207)"]
+    Node_208[shape="rectangle",label="pmu_adapter_upstream(ID_208)"]
+    subgraph cluster_Node_211 {
+        label="PMU(ID_211)"
+        Node_210[shape="rectangle",label="WritePipeline(ID_210)"]
+        Node_209[shape="rectangle",label="ReadPipeline(ID_209)"]
+    }
+    Node_212[shape="rectangle",label="FunctionContext(ID_212)"]
+    Node_213[shape="rectangle",label="pmu_adapter_downstream(ID_213)"]
+    Node_214[shape="rectangle",label="pmu_adapter_upstream(ID_214)"]
+    subgraph cluster_Node_217 {
+        label="PMU(ID_217)"
+        Node_215[shape="rectangle",label="ReadPipeline(ID_215)"]
+        Node_216[shape="rectangle",label="WritePipeline(ID_216)"]
+    }
+    Node_218[shape="rectangle",label="FunctionContext(ID_218)"]
+    Node_219[shape="rectangle",label="pmu_adapter_downstream(ID_219)"]
+    Node_220[shape="rectangle",label="pmu_adapter_upstream(ID_220)"]
+    subgraph cluster_Node_223 {
+        label="PMU(ID_223)"
+        Node_222[shape="rectangle",label="WritePipeline(ID_222)"]
+        Node_221[shape="rectangle",label="ReadPipeline(ID_221)"]
+    }
+    Node_224[shape="rectangle",label="FunctionContext(ID_224)"]
+    Node_225[shape="rectangle",label="pmu_adapter_downstream(ID_225)"]
+    Node_226[shape="rectangle",label="pmu_adapter_upstream(ID_226)"]
+    subgraph cluster_Node_229 {
+        label="PMU(ID_229)"
+        Node_227[shape="rectangle",label="ReadPipeline(ID_227)"]
+        Node_228[shape="rectangle",label="WritePipeline(ID_228)"]
+    }
+    Node_230[shape="rectangle",label="FunctionContext(ID_230)"]
+    Node_231[shape="rectangle",label="pmu_adapter_downstream(ID_231)"]
+    Node_3 -> Node_40 [label="Channel(0)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_3 -> Node_46 [label="Channel(1)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_3 -> Node_52 [label="Channel(2)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_3 -> Node_58 [label="Channel(3)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_7 -> Node_64 [label="Channel(4)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_7 -> Node_70 [label="Channel(5)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_7 -> Node_76 [label="Channel(6)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_7 -> Node_82 [label="Channel(7)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_11 -> Node_88 [label="Channel(8)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_11 -> Node_94 [label="Channel(9)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_11 -> Node_100 [label="Channel(10)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_11 -> Node_106 [label="Channel(11)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_15 -> Node_112 [label="Channel(12)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_15 -> Node_118 [label="Channel(13)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_15 -> Node_124 [label="Channel(14)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_15 -> Node_130 [label="Channel(15)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_19 -> Node_136 [label="Channel(16)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_19 -> Node_142 [label="Channel(17)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_19 -> Node_148 [label="Channel(18)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_19 -> Node_154 [label="Channel(19)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_23 -> Node_160 [label="Channel(20)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_23 -> Node_166 [label="Channel(21)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_23 -> Node_172 [label="Channel(22)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_23 -> Node_178 [label="Channel(23)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_27 -> Node_184 [label="Channel(24)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_27 -> Node_190 [label="Channel(25)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_27 -> Node_196 [label="Channel(26)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_27 -> Node_202 [label="Channel(27)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_31 -> Node_208 [label="Channel(28)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_31 -> Node_214 [label="Channel(29)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_31 -> Node_220 [label="Channel(30)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_31 -> Node_226 [label="Channel(31)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_45 -> Node_32 [label="Channel(32)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_51 -> Node_32 [label="Channel(33)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_57 -> Node_32 [label="Channel(34)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_63 -> Node_32 [label="Channel(35)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_69 -> Node_32 [label="Channel(36)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_75 -> Node_32 [label="Channel(37)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_81 -> Node_32 [label="Channel(38)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_87 -> Node_32 [label="Channel(39)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_93 -> Node_32 [label="Channel(40)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_99 -> Node_32 [label="Channel(41)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_105 -> Node_32 [label="Channel(42)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_111 -> Node_32 [label="Channel(43)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_117 -> Node_32 [label="Channel(44)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_123 -> Node_32 [label="Channel(45)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_129 -> Node_32 [label="Channel(46)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_135 -> Node_32 [label="Channel(47)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_141 -> Node_36 [label="Channel(48)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_147 -> Node_36 [label="Channel(49)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_153 -> Node_36 [label="Channel(50)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_159 -> Node_36 [label="Channel(51)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_165 -> Node_36 [label="Channel(52)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_171 -> Node_36 [label="Channel(53)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_177 -> Node_36 [label="Channel(54)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_183 -> Node_36 [label="Channel(55)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_189 -> Node_36 [label="Channel(56)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_195 -> Node_36 [label="Channel(57)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_201 -> Node_36 [label="Channel(58)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_207 -> Node_36 [label="Channel(59)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_213 -> Node_36 [label="Channel(60)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_219 -> Node_36 [label="Channel(61)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_225 -> Node_36 [label="Channel(62)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_231 -> Node_36 [label="Channel(63)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_0 -> Node_1 [label="Channel(64)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_1 -> Node_2 [label="Channel(65)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_2 -> Node_3 [label="Channel(66)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_4 -> Node_5 [label="Channel(67)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_5 -> Node_6 [label="Channel(68)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_6 -> Node_7 [label="Channel(69)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_8 -> Node_9 [label="Channel(70)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_9 -> Node_10 [label="Channel(71)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_10 -> Node_11 [label="Channel(72)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_12 -> Node_13 [label="Channel(73)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_13 -> Node_14 [label="Channel(74)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_14 -> Node_15 [label="Channel(75)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_16 -> Node_17 [label="Channel(76)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_17 -> Node_18 [label="Channel(77)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_18 -> Node_19 [label="Channel(78)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_20 -> Node_21 [label="Channel(79)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_21 -> Node_22 [label="Channel(80)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_22 -> Node_23 [label="Channel(81)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_24 -> Node_25 [label="Channel(82)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_25 -> Node_26 [label="Channel(83)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_26 -> Node_27 [label="Channel(84)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_28 -> Node_29 [label="Channel(85)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_29 -> Node_30 [label="Channel(86)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_30 -> Node_31 [label="Channel(87)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_34 -> Node_35 [label="Channel(88)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_32 -> Node_33 [label="Channel(89)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_33 -> Node_34 [label="Channel(90)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_38 -> Node_39 [label="Channel(91)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_36 -> Node_37 [label="Channel(92)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_37 -> Node_38 [label="Channel(93)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_40 -> Node_42 [label="Channel(94)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_40 -> Node_42 [label="Channel(95)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_42 -> Node_44 [label="Channel(96)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_44 -> Node_41 [label="Channel(97)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_41 -> Node_45 [label="Channel(98)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_46 -> Node_48 [label="Channel(99)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_46 -> Node_48 [label="Channel(100)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_48 -> Node_50 [label="Channel(101)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_50 -> Node_47 [label="Channel(102)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_47 -> Node_51 [label="Channel(103)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_52 -> Node_54 [label="Channel(104)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_52 -> Node_54 [label="Channel(105)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_54 -> Node_56 [label="Channel(106)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_56 -> Node_53 [label="Channel(107)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_53 -> Node_57 [label="Channel(108)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_58 -> Node_60 [label="Channel(109)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_58 -> Node_60 [label="Channel(110)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_60 -> Node_62 [label="Channel(111)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_62 -> Node_59 [label="Channel(112)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_59 -> Node_63 [label="Channel(113)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_64 -> Node_66 [label="Channel(114)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_64 -> Node_66 [label="Channel(115)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_66 -> Node_68 [label="Channel(116)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_68 -> Node_65 [label="Channel(117)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_65 -> Node_69 [label="Channel(118)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_70 -> Node_72 [label="Channel(119)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_70 -> Node_72 [label="Channel(120)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_72 -> Node_74 [label="Channel(121)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_74 -> Node_71 [label="Channel(122)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_71 -> Node_75 [label="Channel(123)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_76 -> Node_78 [label="Channel(124)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_76 -> Node_78 [label="Channel(125)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_78 -> Node_80 [label="Channel(126)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_80 -> Node_77 [label="Channel(127)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_77 -> Node_81 [label="Channel(128)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_82 -> Node_84 [label="Channel(129)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_82 -> Node_84 [label="Channel(130)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_84 -> Node_86 [label="Channel(131)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_86 -> Node_83 [label="Channel(132)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_83 -> Node_87 [label="Channel(133)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_88 -> Node_90 [label="Channel(134)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_88 -> Node_90 [label="Channel(135)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_90 -> Node_92 [label="Channel(136)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_92 -> Node_89 [label="Channel(137)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_89 -> Node_93 [label="Channel(138)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_94 -> Node_96 [label="Channel(139)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_94 -> Node_96 [label="Channel(140)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_96 -> Node_98 [label="Channel(141)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_98 -> Node_95 [label="Channel(142)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_95 -> Node_99 [label="Channel(143)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_100 -> Node_102 [label="Channel(144)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_100 -> Node_102 [label="Channel(145)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_102 -> Node_104 [label="Channel(146)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_104 -> Node_101 [label="Channel(147)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_101 -> Node_105 [label="Channel(148)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_106 -> Node_108 [label="Channel(149)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_106 -> Node_108 [label="Channel(150)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_108 -> Node_110 [label="Channel(151)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_110 -> Node_107 [label="Channel(152)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_107 -> Node_111 [label="Channel(153)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_112 -> Node_114 [label="Channel(154)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_112 -> Node_114 [label="Channel(155)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_114 -> Node_116 [label="Channel(156)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_116 -> Node_113 [label="Channel(157)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_113 -> Node_117 [label="Channel(158)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_118 -> Node_120 [label="Channel(159)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_118 -> Node_120 [label="Channel(160)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_120 -> Node_122 [label="Channel(161)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_122 -> Node_119 [label="Channel(162)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_119 -> Node_123 [label="Channel(163)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_124 -> Node_126 [label="Channel(164)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_124 -> Node_126 [label="Channel(165)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_126 -> Node_128 [label="Channel(166)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_128 -> Node_125 [label="Channel(167)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_125 -> Node_129 [label="Channel(168)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_130 -> Node_132 [label="Channel(169)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_130 -> Node_132 [label="Channel(170)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_132 -> Node_134 [label="Channel(171)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_134 -> Node_131 [label="Channel(172)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_131 -> Node_135 [label="Channel(173)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_136 -> Node_138 [label="Channel(174)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_136 -> Node_138 [label="Channel(175)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_138 -> Node_140 [label="Channel(176)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_140 -> Node_137 [label="Channel(177)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_137 -> Node_141 [label="Channel(178)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_142 -> Node_144 [label="Channel(179)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_142 -> Node_144 [label="Channel(180)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_144 -> Node_146 [label="Channel(181)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_146 -> Node_143 [label="Channel(182)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_143 -> Node_147 [label="Channel(183)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_148 -> Node_150 [label="Channel(184)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_148 -> Node_150 [label="Channel(185)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_150 -> Node_152 [label="Channel(186)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_152 -> Node_149 [label="Channel(187)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_149 -> Node_153 [label="Channel(188)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_154 -> Node_156 [label="Channel(189)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_154 -> Node_156 [label="Channel(190)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_156 -> Node_158 [label="Channel(191)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_158 -> Node_155 [label="Channel(192)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_155 -> Node_159 [label="Channel(193)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_160 -> Node_162 [label="Channel(194)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_160 -> Node_162 [label="Channel(195)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_162 -> Node_164 [label="Channel(196)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_164 -> Node_161 [label="Channel(197)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_161 -> Node_165 [label="Channel(198)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_166 -> Node_168 [label="Channel(199)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_166 -> Node_168 [label="Channel(200)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_168 -> Node_170 [label="Channel(201)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_170 -> Node_167 [label="Channel(202)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_167 -> Node_171 [label="Channel(203)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_172 -> Node_174 [label="Channel(204)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_172 -> Node_174 [label="Channel(205)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_174 -> Node_176 [label="Channel(206)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_176 -> Node_173 [label="Channel(207)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_173 -> Node_177 [label="Channel(208)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_178 -> Node_180 [label="Channel(209)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_178 -> Node_180 [label="Channel(210)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_180 -> Node_182 [label="Channel(211)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_182 -> Node_179 [label="Channel(212)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_179 -> Node_183 [label="Channel(213)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_184 -> Node_186 [label="Channel(214)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_184 -> Node_186 [label="Channel(215)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_186 -> Node_188 [label="Channel(216)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_188 -> Node_185 [label="Channel(217)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_185 -> Node_189 [label="Channel(218)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_190 -> Node_192 [label="Channel(219)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_190 -> Node_192 [label="Channel(220)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_192 -> Node_194 [label="Channel(221)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_194 -> Node_191 [label="Channel(222)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_191 -> Node_195 [label="Channel(223)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_196 -> Node_198 [label="Channel(224)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_196 -> Node_198 [label="Channel(225)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_198 -> Node_200 [label="Channel(226)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_200 -> Node_197 [label="Channel(227)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_197 -> Node_201 [label="Channel(228)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_202 -> Node_204 [label="Channel(229)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_202 -> Node_204 [label="Channel(230)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_204 -> Node_206 [label="Channel(231)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_206 -> Node_203 [label="Channel(232)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_203 -> Node_207 [label="Channel(233)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_208 -> Node_210 [label="Channel(234)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_208 -> Node_210 [label="Channel(235)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_210 -> Node_212 [label="Channel(236)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_212 -> Node_209 [label="Channel(237)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_209 -> Node_213 [label="Channel(238)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_214 -> Node_216 [label="Channel(239)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_214 -> Node_216 [label="Channel(240)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_216 -> Node_218 [label="Channel(241)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_218 -> Node_215 [label="Channel(242)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_215 -> Node_219 [label="Channel(243)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_220 -> Node_222 [label="Channel(244)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_220 -> Node_222 [label="Channel(245)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_222 -> Node_224 [label="Channel(246)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_224 -> Node_221 [label="Channel(247)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_221 -> Node_225 [label="Channel(248)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_226 -> Node_228 [label="Channel(249)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_226 -> Node_228 [label="Channel(250)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_228 -> Node_230 [label="Channel(251)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_230 -> Node_227 [label="Channel(252)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+    Node_227 -> Node_231 [label="Channel(253)",tooltip="Capacity: Some(32)\nLatency: 1\nRespLatency: 1"]
+}
+Elapsed cycles: Some(277)
+Runtime (s): 0.49459344
+
+
+
+
+
+
+
+
+Compute_Latency:[6.4]
+Memory_Latency:[0.0]
+Network_Latency:[0.0]
+dfmodel_time:[6.4], total_time:6.4
+dam_compute_time:[6.925], total_time:6.925
