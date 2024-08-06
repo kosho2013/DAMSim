@@ -67,19 +67,20 @@ fn main() {
 
 	let num_vec_per_pmu = sram_cap / lane_dim / word;
 
-	let mut Compute_Latency = vec![];
-	let mut Memory_Latency = vec![];
-	let mut Network_Latency = vec![];
+	let mut Compute_Latency: Vec<f32> = vec![];
+	let mut Memory_Latency: Vec<f32> = vec![];
+	let mut Network_Latency: Vec<f32> = vec![];
 	let mut num_tile: usize = 0;
 	
 	let log_path = format!("{}{}", &args[1], "/log.txt");
 	let lines = read_to_string(log_path).unwrap();
 
 
-	let mut dfmodel_time: Vec<usize> = vec![];
+	let mut dfmodel_time: Vec<f32> = vec![];
+	let mut dam_compute_time: Vec<f32> = vec![];
+	let mut dam_memory_time: Vec<f32> = vec![];
+	let mut dam_network_time: Vec<f32> = vec![];
 
-
-	
 
 	for line in lines.lines() {
 		if line.starts_with("num_tile") 
@@ -100,32 +101,28 @@ fn main() {
 		{ 
 			let tmp: f32 = line.split_whitespace().last().unwrap().parse().unwrap();
 			let tmp2 = tmp / num_tile as f32;
-			let tmp3: usize = tmp2.round() as usize;
-			Compute_Latency.push(tmp3);
+			Compute_Latency.push(tmp2);
 		}
 
 		if line.starts_with("Memory_Latency[") 
 		{ 
 			let tmp: f32 = line.split_whitespace().last().unwrap().parse().unwrap();
 			let tmp2 = tmp / num_tile as f32;
-			let tmp3: usize = tmp2.round() as usize;
-			Memory_Latency.push(tmp3);
+			Memory_Latency.push(tmp2);
 		}
 
 		if line.starts_with("Network_Latency[") 
 		{
 			let tmp: f32 = line.split_whitespace().last().unwrap().parse().unwrap();
 			let tmp2 = tmp / num_tile as f32;
-			let tmp3: usize = tmp2.round() as usize;
-			Network_Latency.push(tmp3);
+			Network_Latency.push(tmp2);
 		}
 
 		if line.starts_with("Per_Config_II[") 
 		{ 
 			let tmp: f32 = line.split_whitespace().last().unwrap().parse().unwrap();
 			let tmp2: f32 = tmp / num_tile as f32;
-			let tmp3: usize = tmp2.round() as usize;
-			dfmodel_time.push(tmp3);
+			dfmodel_time.push(tmp2);
 		}
 	}
 
@@ -954,14 +951,9 @@ fn main() {
 			);
 			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
 
-
-			let dam_compute_time = executed.elapsed_cycles().unwrap();
-			let dam_compute_time: f32 = dam_compute_time as f32 / num_input as f32 / freq as f32;
-			println!("DFModel compute latency per tile {}", Compute_Latency[i]);
-			println!("DFModel memory latency per tile {}", Memory_Latency[i]);
-			println!("DFModel network latency per tile {}", Network_Latency[i]);
-			println!("DFModel overall latency per tile {}", dfmodel_time[i]);
-			println!("DAM compute latency per tile {}", dam_compute_time);
+			let tmp: u64 = executed.elapsed_cycles().unwrap();
+			let tmp: f32 = tmp as f32 / num_input as f32 / freq as f32;
+			dam_compute_time.push(tmp);
 		}
 
 
@@ -3136,17 +3128,33 @@ fn main() {
 			);
 			println!("Elapsed cycles: {:?}", executed.elapsed_cycles());
 
-			let dam_compute_time = executed.elapsed_cycles().unwrap();
-			let dam_compute_time: f32 = dam_compute_time as f32 / num_input as f32 / freq as f32;
-			println!("DFModel compute latency per tile {}", Compute_Latency[i]);
-			println!("DFModel memory latency per tile {}", Memory_Latency[i]);
-			println!("DFModel network latency per tile {}", Network_Latency[i]);
-			println!("DFModel overall latency per tile {}", dfmodel_time[i]);
-			println!("DAM compute latency per tile {}", dam_compute_time);
+			let tmp: u64 = executed.elapsed_cycles().unwrap();
+			let tmp: f32 = tmp as f32 / num_input as f32 / freq as f32;
+			dam_compute_time.push(tmp);
 		}
-
 
 		println!("\n\n\n\n\n\n\n");
 	}
+
+
+
+	let mut sum1: f32 = 0.0;
+	for ele in dfmodel_time.clone()
+	{
+		sum1 += ele as f32;
+	}
+	let mut sum2: f32 = 0.0;
+	for ele in dam_compute_time.clone()
+	{
+		sum2 += ele;
+	}
+
+	println!("Compute_Latency:{:?}", Compute_Latency);
+	println!("Memory_Latency:{:?}", Memory_Latency);
+	println!("Network_Latency:{:?}", Network_Latency);
+	println!("dfmodel_time:{:?}, total_time:{}", dfmodel_time.clone(), sum1);
+	println!("dam_compute_time:{:?}, total_time:{}", dam_compute_time.clone(), sum2);
+
+
 
 }
