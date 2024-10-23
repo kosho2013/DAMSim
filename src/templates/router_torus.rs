@@ -198,7 +198,8 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
 
 
 
-        let mut prev_lowest_idx = invalid;
+        let mut scoreboard = [0, 0, 0, 0, 0]; // NSEWL
+        let mut maxV = 0;
 
         loop
         {
@@ -285,8 +286,6 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                     self.time.advance(future_time_tmp[lowest_idx]);
                 } else // Something
                 {
-                    let flag;
-
 
                     let data = self.in_stream[in_idx_vec[lowest_idx]].dequeue(&self.time).unwrap().data;
                     if data != data_vec[lowest_idx]
@@ -298,18 +297,13 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                     // send the data
                     if dst_x_vec[lowest_idx] == self.x && dst_y_vec[lowest_idx] == self.y // exit local port
                     {
-                        if self.skip_local
-                        {
-                            flag = false;
-                        } else
+                        if !self.skip_local
                         {
                             if out_idx_vec[num_ports-1] == invalid
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                self.out_stream[out_idx_vec[num_ports-1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-
+                                self.out_stream[out_idx_vec[num_ports-1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[num_ports-1] += 1;
                             }
                         }
@@ -325,32 +319,16 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[3] += 1;
                             }
                         } else // exit E port
                         {
-                            if out_idx_vec[2] == invalid 
+                            if out_idx_vec[2] == invalid
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[2] += 1;
                             }
                         }
@@ -368,15 +346,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[0] += 1;
                             }
                         } else // exit S port
@@ -385,15 +355,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[1] += 1;
                             }
                         }
@@ -414,15 +376,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[0] += 1;
                             }
                         } else // exit S port
@@ -431,15 +385,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[1] += 1;
                             }
                         }
@@ -460,15 +406,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[0] += 1;
                             }
                         } else // exit S port
@@ -477,15 +415,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[1] += 1;
                             }
                         }
@@ -504,15 +434,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[2] += 1;
                             }
                         } else // exit W port
@@ -521,15 +443,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[3] += 1;
                             }
                         }
@@ -549,15 +463,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[1] += 1;
                             }
                         } else // exit N port
@@ -566,15 +472,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[0] += 1;
                             }
                         }
@@ -593,15 +491,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[1] += 1;
                             }
                         } else // exit N port
@@ -610,15 +500,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[0] += 1;
                             }
                         }
@@ -638,15 +520,7 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[1] += 1;
                             }
                         } else // exit N port
@@ -655,33 +529,31 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[0] += 1;
                             }
                         }
-
-
                         
                     } else
                     {
                         panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                     }
-                    
 
-                    if flag == true
+
+
+                    scoreboard[lowest_idx] += 1;
+
+                    let mut tmp = 0;
+                    for n in 0..num_ports-1
                     {
-                        self.time.incr_cycles(1);   
+                        if scoreboard[n] > tmp
+                        {
+                            tmp = scoreboard[n];
+                        }
                     }
-                    
-                    prev_lowest_idx = lowest_idx;
+                    maxV = tmp;
+
+
 
 
                 }
@@ -719,7 +591,10 @@ impl<A: DAMType + num::Num> Context for router_torus<A> {
 
             if cnt1 == num_ports && cnt2 == num_ports
             {
-                println!("finished!!!!!!!!!!!!!!!!!!!!!!! {}, {}", self.x, self.y);
+                self.time.incr_cycles(maxV);
+
+
+                println!("finished!!!!!!!!!!!!!!!!!!!!!!! x:{}, y:{}, scoreboard:{:?}", self.x, self.y, scoreboard);
                 return;
             }
 

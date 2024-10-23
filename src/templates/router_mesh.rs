@@ -199,15 +199,16 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
         }
 
 
-        let mut prev_lowest_idx = invalid;
-        let mut prev_time = invalid;
-        
-        let mut ii_increase = 0;
 
 
-        let tmp = self.x.clone().to_string() + &self.y.clone().to_string() + ".txt";
-        let mut file = File::create(tmp).expect("creation failed");
+        // let tmp = self.x.clone().to_string() + &self.y.clone().to_string() + ".txt";
+        // let mut file = File::create(tmp).expect("creation failed");
 
+
+
+
+        let mut scoreboard = [0, 0, 0, 0, 0]; // NSEWL
+        let mut maxV = 0;
 
         loop
         {
@@ -290,20 +291,10 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
             if lowest_idx != invalid
             {
                 if data_vec[lowest_idx] == invalid // Nothing
-                {
+                {         
                     self.time.advance(future_time_tmp[lowest_idx]);
-                    
-                    let message = format!("Nothing, future_time:{}, local_time:{}\n", future_time_tmp[lowest_idx], self.time.tick());
-                    file.write(message.as_bytes());
-
-
-                    prev_time = invalid;
-
                 } else // Something
                 {
-
-                    let flag;
-
 
                     let data = self.in_stream[in_idx_vec[lowest_idx]].dequeue(&self.time).unwrap().data;
                     if data != data_vec[lowest_idx]
@@ -312,21 +303,21 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                     }
                     in_num_recieved[lowest_idx] += 1;
 
+
+
+
+
+
                     // send the data
                     if dst_x_vec[lowest_idx] == self.x && dst_y_vec[lowest_idx] == self.y // exit local port
                     {
-                        if self.skip_local
-                        {
-                            flag = false;
-                        } else
+                        if !self.skip_local
                         {
                             if out_idx_vec[num_ports-1] == invalid
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                self.out_stream[out_idx_vec[num_ports-1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                                
+                                self.out_stream[out_idx_vec[num_ports-1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap(); 
                                 out_num_sent[num_ports-1] += 1;
                             }
                         }
@@ -337,15 +328,7 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (future_time[lowest_idx] == prev_time || prev_time == invalid)
-                            {
-                                self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
+                            self.out_stream[out_idx_vec[3]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                             out_num_sent[3] += 1;
                         }
 
@@ -355,16 +338,8 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (future_time[lowest_idx] == prev_time || prev_time == invalid)
-                            {
-                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
-                            out_num_sent[0] += 1;
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
+                            out_num_sent[0] += 1; 
                         }
 
                     } else if dst_x_vec[lowest_idx] < self.x && dst_y_vec[lowest_idx] == self.y // exit N port
@@ -373,15 +348,7 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (future_time[lowest_idx] == prev_time || prev_time == invalid)
-                            {
-                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                             out_num_sent[0] += 1;
                         }
 
@@ -391,15 +358,7 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (future_time[lowest_idx] == prev_time || prev_time == invalid)
-                            {
-                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
+                            self.out_stream[out_idx_vec[0]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                             out_num_sent[0] += 1;
                         }
 
@@ -409,15 +368,7 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (future_time[lowest_idx] == prev_time || prev_time == invalid)
-                            {
-                                self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
+                            self.out_stream[out_idx_vec[2]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                             out_num_sent[2] += 1;
                         }
 
@@ -427,15 +378,7 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (future_time[lowest_idx] == prev_time || prev_time == invalid)
-                            {
-                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
 
@@ -445,15 +388,7 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (future_time[lowest_idx] == prev_time || prev_time == invalid)
-                            {
-                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
 
@@ -463,15 +398,7 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (future_time[lowest_idx] == prev_time || prev_time == invalid)
-                            {
-                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
+                            self.out_stream[out_idx_vec[1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                             out_num_sent[1] += 1;
                         }
                         
@@ -481,34 +408,17 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
                     }
 
                     
+                    scoreboard[lowest_idx] += 1;
 
-
-
-
-
-                    let zzz = self.time.tick();
-
-
-
-
-                    if flag == true
+                    let mut tmp = 0;
+                    for n in 0..num_ports-1
                     {
-                        self.time.incr_cycles(1);   
-                        ii_increase += 1;
+                        if scoreboard[n] > tmp
+                        {
+                            tmp = scoreboard[n];
+                        }
                     }
-                    
-                    
-
-
-
-
-
-                    let message = format!("Something, lowest_idx:{}, dst_x:{}, dst_y:{}, local_time:{}, prev_local_time:{}, flag:{}, prev_lowest_idx:{}, lowest_idx:{}, prev_time:{}, future_time:{}\n", lowest_idx, dst_x_vec[lowest_idx].clone(), dst_y_vec[lowest_idx].clone(), self.time.tick(), zzz, flag, prev_lowest_idx, lowest_idx, prev_time, future_time[lowest_idx]);
-                    file.write(message.as_bytes());
-
-
-                    prev_lowest_idx = lowest_idx;
-                    prev_time = future_time[lowest_idx];
+                    maxV = tmp;
 
                 }
             }
@@ -545,7 +455,10 @@ impl<A: DAMType + num::Num> Context for router_mesh<A> {
 
             if cnt1 == num_ports && cnt2 == num_ports
             {
-                println!("finished!!!!!!!!!!!!!!!!!!!!!!! {}, {}, {}", self.x, self.y, ii_increase);
+                self.time.incr_cycles(maxV);
+
+
+                println!("finished!!!!!!!!!!!!!!!!!!!!!!! x:{}, y:{}, scoreboard:{:?}", self.x, self.y, scoreboard);
                 return;
             }
 

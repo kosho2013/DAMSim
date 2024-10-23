@@ -272,8 +272,12 @@ impl<A: DAMType + num::Num> Context for router_dragonfly<A> {
         }
 
 
-        let mut prev_lowest_idx = invalid;
-        
+        let mut scoreboard = vec![];
+        for _ in 0..num_ports
+        {
+            scoreboard.push(0);
+        }
+        let mut maxV = 0;
 
         loop
         {
@@ -361,11 +365,6 @@ impl<A: DAMType + num::Num> Context for router_dragonfly<A> {
                 } else // Something
                 {
 
-
-
-                    let mut flag;
-
-
                     let data = self.in_stream[in_idx_vec[lowest_idx]].dequeue(&self.time).unwrap().data;
                     if data != data_vec[lowest_idx]
                     {
@@ -378,18 +377,13 @@ impl<A: DAMType + num::Num> Context for router_dragonfly<A> {
                     // send the data
                     if dst_x_vec[lowest_idx] == self.x && dst_y_vec[lowest_idx] == self.y // exit local port
                     {
-                        if self.skip_local
-                        {
-                            flag = false;
-                        } else
+                        if !self.skip_local
                         {
                             if out_idx_vec[num_ports-1] == invalid
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                self.out_stream[out_idx_vec[num_ports-1]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-
+                                self.out_stream[out_idx_vec[num_ports-1]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[num_ports-1] += 1;
                             }
                         }
@@ -406,15 +400,7 @@ impl<A: DAMType + num::Num> Context for router_dragonfly<A> {
                         {
                             panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                         } else {
-                            if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                            {
-                                self.out_stream[out_idx_vec[idx]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                flag = false;
-                            } else
-                            {
-                                self.out_stream[out_idx_vec[idx]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                flag = true;
-                            }
+                            self.out_stream[out_idx_vec[idx]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                             out_num_sent[idx] += 1;
                         }
                         
@@ -447,15 +433,7 @@ impl<A: DAMType + num::Num> Context for router_dragonfly<A> {
                             {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[radix_intra+curr_out_port_idx]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[radix_intra+curr_out_port_idx]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[radix_intra+curr_out_port_idx]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[radix_intra+curr_out_port_idx] += 1;
                             }
 
@@ -472,15 +450,7 @@ impl<A: DAMType + num::Num> Context for router_dragonfly<A> {
                                 panic!("x:{}, y:{}, Wrong!", self.x, self.y);
                             } else
                             {
-                                if (lowest_idx == num_ports-1) || (lowest_idx != prev_lowest_idx)
-                                {
-                                    self.out_stream[out_idx_vec[idx]].enqueue(&self.time, ChannelElement::new(self.time.tick(), data_vec[lowest_idx].clone())).unwrap();
-                                    flag = false;
-                                } else
-                                {
-                                    self.out_stream[out_idx_vec[idx]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
-                                    flag = true;
-                                }
+                                self.out_stream[out_idx_vec[idx]].enqueue(&self.time, ChannelElement::new(self.time.tick()+1, data_vec[lowest_idx].clone())).unwrap();
                                 out_num_sent[idx] += 1;
                             }
 
@@ -488,15 +458,21 @@ impl<A: DAMType + num::Num> Context for router_dragonfly<A> {
 
                     }
 
-
-                    if flag == true
-                    {
-                        self.time.incr_cycles(1);
-                    }
-
-
                     
-                    prev_lowest_idx = lowest_idx;
+
+
+                    scoreboard[lowest_idx] += 1;
+
+                    let mut tmp = 0;
+                    for n in 0..num_ports-1
+                    {
+                        if scoreboard[n] > tmp
+                        {
+                            tmp = scoreboard[n];
+                        }
+                    }
+                    maxV = tmp;
+
                     
                     
                 }
@@ -536,7 +512,10 @@ impl<A: DAMType + num::Num> Context for router_dragonfly<A> {
 
             if cnt1 == num_ports && cnt2 == num_ports
             {
-                println!("finished!!!!!!!!!!!!!!!!!!!!!!! {}, {}", self.x, self.y);
+                self.time.incr_cycles(maxV);
+
+
+                println!("finished!!!!!!!!!!!!!!!!!!!!!!! x:{}, y:{}, scoreboard:{:?}", self.x, self.y, scoreboard);
                 return;
             }
 
